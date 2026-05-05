@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  /* Define the variables here */
+  --bg-beige: #efe7d9; 
+  --text-main: #1a1a1a;
+  --accent-brown: #a68b6d;
+}
+
+@theme {
+  /* Map them to Tailwind colors so you can use class="bg-beige" */
+  --color-beige: var(--bg-beige);
+  --color-charcoal: var(--text-main);
+  --color-gold: var(--accent-brown);
+  
+  /* Add Serif Font Support */
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+body {
+  background-color: var(--bg-beige);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, .font-serif {
+  font-family: var(--font-serif);
+}
+
+/* globals.css */
+.scroll-mt-nav {
+  scroll-margin-top: 120px; /* Aapke navbar ki height ke hisaab se adjust karein */
+}

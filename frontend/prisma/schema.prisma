@@ -1,0 +1,20 @@
+// User Table update karein
+model User {
+  id        Int      @id @default(autoincrement()) // String hata kar Int kiya
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("USER")
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+// Order Table mein bhi userId ko Int karna padega
+model Order {
+  id        Int      @id @default(autoincrement())
+  userId    Int      // String se Int kiya
+  user      User     @relation(fields: [userId], references: [id])
+  total     Float
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+}
