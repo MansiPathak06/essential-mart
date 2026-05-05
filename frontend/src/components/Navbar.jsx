@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Search, User, LogOut, ChevronDown, Menu, X } from 'lucide-react';
- const CATEGORY_DATA = {
+
+const CATEGORY_DATA = {
   MEN: [
     { title: "WESTERN WEAR", links: [{name: "Jeans", slug: "jeans"}, {name: "Shirts", slug: "shirts"}, {name: "Shorts", slug: "shorts"}, {name: "Track Pants", slug: "track-pants"}, {name: "Tshirts", slug: "t-shirts"}] },
     { title: "FOOTWEAR", links: [{name: "Boots", slug: "boots"}, {name: "Casual Shoes", slug: "casual-shoes"}, {name: "Sneakers", slug: "sneakers"}, {name: "Sports Shoes", slug: "sports-shoes"}] },
     { title: "ETHNIC WEAR", links: [{name: "Kurtas", slug: "ethnic"}, {name: "Sherwani Sets", slug: "ethnic"}, {name: "Stoles", slug: "ethnic"}] },
-    
   ],
   WOMEN: [
     { title: "ETHNIC WEAR", links: [{name: "Kurtis", slug: "kurtis"}, {name: "Sarees", slug: "sarees"}, {name: "Lehengas", slug: "lehengas"}, {name: "Suit Sets", slug: "suit-sets"}] },
@@ -32,18 +33,20 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
   const router = useRouter();
 
+  // ✅ UPDATED: clearCart bhi le rahe hain
+  const { totalItems, clearCart } = useCart();
+
   // Check authentication
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
-        // users table has no name column — derive display name from email
         const displayName = parsed.email ? parsed.email.split('@')[0] : 'User';
         window.setTimeout(() => setUser({
           name:  displayName,
           email: parsed.email || '',
-          role:  (parsed.role  || 'user').toLowerCase(),
+          role:  (parsed.role || 'user').toLowerCase(),
         }), 0);
       } catch (e) {
         localStorage.removeItem('user');
@@ -51,9 +54,11 @@ export default function Navbar() {
     }
   }, []);
 
+  // ✅ UPDATED: logout pe cart bhi clear hogi
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    clearCart();
     setUser(null);
     router.push('/login');
   };
@@ -61,11 +66,11 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-50 bg-white border-b border-gray-100 shadow-sm font-sans">
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex justify-between items-center">
-        
+
         {/* --- LOGO --- */}
         <Link href="/" className="group flex flex-col leading-none">
           <span className="text-xl md:text-2xl font-serif tracking-[0.3em] font-bold text-[#1a1a1a]">
-           KEI
+            KEI
           </span>
           <div className="flex items-center gap-2">
             <div className="h-[1px] w-6 md:w-8 bg-[#a68b6d] transition-all group-hover:w-12" />
@@ -78,20 +83,20 @@ export default function Navbar() {
         {/* --- DESKTOP NAVIGATION --- */}
         <div className="hidden md:flex h-full items-center space-x-10">
           {Object.keys(CATEGORY_DATA).map((tab) => (
-            <div 
+            <div
               key={tab}
               className="h-full flex items-center relative"
               onMouseEnter={() => setActiveTab(tab)}
               onMouseLeave={() => setActiveTab(null)}
             >
-              <Link 
+              <Link
                 href={`/${tab.toLowerCase()}-store`}
                 className={`text-[12px] font-black tracking-widest transition-all uppercase h-full flex items-center gap-1 ${activeTab === tab ? 'text-[#a68b6d]' : 'text-gray-800'}`}
               >
                 {tab}
                 <ChevronDown size={12} className={`transition-transform ${activeTab === tab ? 'rotate-180' : ''}`} />
               </Link>
-              
+
               {activeTab === tab && (
                 <motion.div layoutId="nav-underline" className="absolute bottom-0 left-0 w-full h-0.5 bg-[#a68b6d]" />
               )}
@@ -101,20 +106,21 @@ export default function Navbar() {
 
         {/* --- RIGHT SECTION (ICONS & AUTH) --- */}
         <div className="flex items-center gap-3 md:gap-6">
+
           {/* Search */}
           <div className="relative hidden lg:block">
-            <input 
-              type="text" 
-              placeholder="SEARCH..." 
+            <input
+              type="text"
+              placeholder="SEARCH..."
               className="bg-gray-50 border border-gray-100 rounded-full px-5 py-2 text-[10px] font-bold tracking-wider w-48 focus:w-64 focus:bg-white focus:border-[#a68b6d] outline-none transition-all uppercase"
             />
             <Search className="absolute right-4 top-2.5 text-gray-400" size={14} />
           </div>
 
           {/* User Account */}
-          <div 
-            className="relative py-2" 
-            onMouseEnter={() => setShowUserMenu(true)} 
+          <div
+            className="relative py-2"
+            onMouseEnter={() => setShowUserMenu(true)}
             onMouseLeave={() => setShowUserMenu(false)}
           >
             <div className="flex items-center gap-1 cursor-pointer group">
@@ -128,7 +134,7 @@ export default function Navbar() {
 
             <AnimatePresence>
               {showUserMenu && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 15 }}
@@ -150,18 +156,41 @@ export default function Navbar() {
                         <p className="text-[10px] font-black text-[#a68b6d] uppercase tracking-widest">Logged In As</p>
                         <p className="text-[12px] font-bold text-gray-900 truncate">{user.email}</p>
                       </div>
+
+                      {/* Admin Dashboard — sirf admin ko dikhega */}
                       {user.role === 'admin' && (
                         <Link href="/admin" className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
                           Admin Dashboard
                         </Link>
                       )}
-                      <Link href={user.role === 'admin' ? '/admin/profile' : '/profile'} className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
-                        My Profile
-                      </Link>
-                      <Link href={user.role === 'admin' ? '/admin/orders' : '/orders'} className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
+
+                      {/* ✅ NEW: My Dashboard — sirf normal user ko dikhega */}
+                      {user.role !== 'admin' && (
+                        <Link href="/dashboard" className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
+                          My Dashboard
+                        </Link>
+                      )}
+
+                     {user.role !== 'admin' && (
+  <Link
+    href="/dashboard?tab=Profile"
+    className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase"
+  >
+    My Profile
+  </Link>
+)}
+
+                      <Link
+                        href={user.role === 'admin' ? '/admin/orders' : '/orders'}
+                        className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase"
+                      >
                         Orders
                       </Link>
-                      <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-[11px] font-bold text-red-500 hover:bg-red-50 rounded-lg transition-all uppercase gap-2">
+
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-3 text-[11px] font-bold text-red-500 hover:bg-red-50 rounded-lg transition-all uppercase gap-2"
+                      >
                         <LogOut size={14} /> Log Out
                       </button>
                     </div>
@@ -171,13 +200,15 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
 
-          {/* Cart */}
-          <div className="relative cursor-pointer group">
+          {/* ✅ UPDATED: Cart — real count + link */}
+          <Link href="/cart" className="relative cursor-pointer group">
             <ShoppingBag size={20} className="text-gray-800 group-hover:text-[#a68b6d] transition-colors" />
-            <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-              0
-            </span>
-          </div>
+            {totalItems > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                {totalItems > 9 ? '9+' : totalItems}
+              </span>
+            )}
+          </Link>
 
           {/* Mobile Menu Toggle */}
           <button className="md:hidden p-1" onClick={() => setMobileMenu(!mobileMenu)}>
@@ -189,7 +220,7 @@ export default function Navbar() {
       {/* --- MEGA MENU (DESKTOP) --- */}
       <AnimatePresence>
         {activeTab && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -199,58 +230,50 @@ export default function Navbar() {
           >
             <div className="max-w-7xl mx-auto px-10 py-12">
               <div className="grid grid-cols-5 gap-10">
-               {/* --- MEGA MENU (DESKTOP) --- */}
-{/* ... upar ka code ... */}
 
-{/* --- MEGA MENU IMAGE SECTION --- */}
-<div className="col-span-1 rounded-3xl h-[250px] relative overflow-hidden group">
-  
-  {/* Dynamic Image Selection based on activeTab */}
-  <img 
-    src={
-      activeTab === 'MEN' ? 'https://i.pinimg.com/736x/43/90/ff/4390ffa4d38e7939b0b08caabb5d25fd.jpg' :
-      activeTab === 'WOMEN' ? 'https://i.pinimg.com/1200x/8b/6f/d3/8b6fd3f127d05ffe961fcbb0f56faccf.jpg' :
-      'https://i.pinimg.com/736x/4f/45/95/4f45959163bfe0b52a344043c3190c13.jpg'
-    }
-    alt="New Arrivals"
-    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-  />
-  
-  {/* Gradient Overlay */}
-  <div className="absolute inset-0 bg-black/40" />
-  
-  <div className="relative z-10 p-6 flex flex-col justify-end h-full">
-    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none text-white">
-      New<br/>Arrivals
-    </h4>
-    <p className="text-[10px] font-bold uppercase tracking-[0.2em] mt-2 text-white/80">
-      Shop {activeTab}
-    </p>
-  </div>
-</div>
+                {/* Mega Menu Image */}
+                <div className="col-span-1 rounded-3xl h-[250px] relative overflow-hidden group">
+                  <img
+                    src={
+                      activeTab === 'MEN'   ? 'https://i.pinimg.com/736x/43/90/ff/4390ffa4d38e7939b0b08caabb5d25fd.jpg' :
+                      activeTab === 'WOMEN' ? 'https://i.pinimg.com/1200x/8b/6f/d3/8b6fd3f127d05ffe961fcbb0f56faccf.jpg' :
+                                              'https://i.pinimg.com/736x/4f/45/95/4f45959163bfe0b52a344043c3190c13.jpg'
+                    }
+                    alt="New Arrivals"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black/40" />
+                  <div className="relative z-10 p-6 flex flex-col justify-end h-full">
+                    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none text-white">
+                      New<br />Arrivals
+                    </h4>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] mt-2 text-white/80">
+                      Shop {activeTab}
+                    </p>
+                  </div>
+                </div>
 
-{/* ... baki ka code ... */}
+                {/* Category Links */}
+                {CATEGORY_DATA[activeTab].map((section, idx) => (
+                  <div key={idx} className="flex flex-col">
+                    <h4 className="text-[12px] font-black mb-6 text-black uppercase tracking-widest border-l-2 border-[#a68b6d] pl-3">
+                      {section.title}
+                    </h4>
+                    <ul className="space-y-3">
+                      {section.links.map((link) => (
+                        <li key={link.name}>
+                          <Link
+                            href={`/${activeTab.toLowerCase()}-store?subcategory=${link.slug}`}
+                            className="text-[11px] font-bold text-gray-500 hover:text-black hover:translate-x-1 transition-all block uppercase"
+                          >
+                            {link.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
 
-               {CATEGORY_DATA[activeTab].map((section, idx) => (
-  <div key={idx} className="flex flex-col">
-    <h4 className="text-[12px] font-black mb-6 text-black uppercase tracking-widest border-l-2 border-[#a68b6d] pl-3">
-      {section.title}
-    </h4>
-    <ul className="space-y-3">
-      {section.links.map((link) => (
-        <li key={link.name}>
-          <Link 
-            href={`/${activeTab.toLowerCase()}-store?subcategory=${link.slug}`} 
-            className="text-[11px] font-bold text-gray-500 hover:text-black hover:translate-x-1 transition-all block uppercase"
-          >
-            {link.name}
-          </Link>
-        </li>
-      ))}
-    </ul>
-  </div>
-))}
-                 
               </div>
             </div>
           </motion.div>
@@ -261,7 +284,7 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileMenu && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -279,9 +302,52 @@ export default function Navbar() {
                 <X size={20} onClick={() => setMobileMenu(false)} className="cursor-pointer" />
               </div>
 
+              {/* ✅ Mobile: User links */}
+              {user && (
+                <div className="mb-6 pb-4 border-b border-gray-100">
+                  <p className="text-[10px] font-black text-[#a68b6d] uppercase tracking-widest mb-3">
+                    Hi, {user.name}
+                  </p>
+                  {user.role !== 'admin' && (
+                    <Link href="/dashboard" onClick={() => setMobileMenu(false)}
+                      className="block text-sm font-bold text-gray-700 py-2 hover:text-[#a68b6d]">
+                      My Dashboard
+                    </Link>
+                  )}
+                  {user.role === 'admin' && (
+                    <Link href="/admin" onClick={() => setMobileMenu(false)}
+                      className="block text-sm font-bold text-gray-700 py-2 hover:text-[#a68b6d]">
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <Link href="/cart" onClick={() => setMobileMenu(false)}
+                    className="block text-sm font-bold text-gray-700 py-2 hover:text-[#a68b6d]">
+                    My Cart {totalItems > 0 && `(${totalItems})`}
+                  </Link>
+                  <button onClick={() => { handleLogout(); setMobileMenu(false); }}
+                    className="block text-sm font-bold text-red-500 py-2">
+                    Logout
+                  </button>
+                </div>
+              )}
+
+              {!user && (
+                <div className="mb-6 pb-4 border-b border-gray-100 flex gap-3">
+                  <Link href="/login" onClick={() => setMobileMenu(false)}
+                    className="flex-1 text-center bg-black text-white text-xs font-black py-2.5 rounded-lg uppercase tracking-wider">
+                    Login
+                  </Link>
+                  <Link href="/signup" onClick={() => setMobileMenu(false)}
+                    className="flex-1 text-center border border-gray-300 text-xs font-black py-2.5 rounded-lg uppercase tracking-wider">
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+
+              {/* Category Links */}
               {Object.keys(CATEGORY_DATA).map(tab => (
                 <div key={tab} className="mb-6">
-                  <Link 
+                  <Link
                     href={`/${tab.toLowerCase()}-store`}
                     onClick={() => setMobileMenu(false)}
                     className="block font-black text-[#a68b6d] tracking-[0.2em] border-b border-gray-50 pb-2 mb-3 uppercase"
@@ -292,16 +358,16 @@ export default function Navbar() {
                     {CATEGORY_DATA[tab].map(section => (
                       <div key={section.title} className="mb-4">
                         <p className="text-[10px] font-bold text-gray-400 mb-2 uppercase">{section.title}</p>
-                       {section.links.map((link) => (
-  <Link 
-    key={link.name} 
-    href={`/${tab.toLowerCase()}-store?subcategory=${link.slug}`} 
-    onClick={() => setMobileMenu(false)}
-    className="block text-sm font-medium text-gray-700 py-1 hover:text-[#a68b6d]"
-  >
-    {link.name}
-  </Link>
-))}
+                        {section.links.map((link) => (
+                          <Link
+                            key={link.name}
+                            href={`/${tab.toLowerCase()}-store?subcategory=${link.slug}`}
+                            onClick={() => setMobileMenu(false)}
+                            className="block text-sm font-medium text-gray-700 py-1 hover:text-[#a68b6d]"
+                          >
+                            {link.name}
+                          </Link>
+                        ))}
                       </div>
                     ))}
                   </div>

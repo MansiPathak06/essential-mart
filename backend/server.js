@@ -2,7 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const cartRoutes = require('./routes/cartRoutes');
+const userRoutes = require('./routes/userRoutes');
 require('dotenv').config();
+const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +25,9 @@ app.get('/api/health', (req, res) => res.json({ status: 'UP', database: 'Connect
 app.use('/api', require('./routes/authRoutes'));
 app.use('/api', require('./routes/productRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/cart', cartRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/orders', orderRoutes);
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ error: `${req.method} ${req.url} not found` }));
