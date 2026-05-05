@@ -46,10 +46,14 @@ const getProductById = async (req, res) => {
 
 const addProduct = async (req, res) => {
     const {
-        name, category, subcategory, originalPrice, discountedPrice,
+        name, category, originalPrice, discountedPrice,
         images, shortDescription, fullDescription, inStock,
-        reviewerName, rating, reviewText,
     } = req.body;
+    const subcategory = req.body.subcategory || req.body.subCategory || req.body.sub_category;
+    const firstReview = Array.isArray(req.body.reviews) ? req.body.reviews[0] : null;
+    const reviewerName = req.body.reviewerName || firstReview?.reviewerName;
+    const rating = req.body.rating || firstReview?.rating;
+    const reviewText = req.body.reviewText || firstReview?.text;
 
     if (!name || !category)
         return res.status(400).json({ error: 'Product name and category are required' });

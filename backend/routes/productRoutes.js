@@ -8,12 +8,13 @@ const {
     addToCart,
     getOrders,
 } = require('../controllers/productController');
+const { verifyAdmin } = require('../middleware/auth');
 
 router.get('/products', getProducts);
 router.get('/product-detail/:id', getProductById);
-router.post('/products', addProduct);
-router.put('/products/:id', updateProduct);
-router.delete('/products/:id', deleteProduct);
+router.post('/products', verifyAdmin, addProduct);
+router.put('/products/:id', verifyAdmin, updateProduct);
+router.delete('/products/:id', verifyAdmin, deleteProduct);
 
 router.post('/cart', addToCart);
 router.get('/orders', getOrders);

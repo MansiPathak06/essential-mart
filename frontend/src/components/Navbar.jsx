@@ -40,11 +40,11 @@ export default function Navbar() {
         const parsed = JSON.parse(savedUser);
         // users table has no name column — derive display name from email
         const displayName = parsed.email ? parsed.email.split('@')[0] : 'User';
-        setUser({
+        window.setTimeout(() => setUser({
           name:  displayName,
           email: parsed.email || '',
-          role:  parsed.role  || 'user',
-        });
+          role:  (parsed.role  || 'user').toLowerCase(),
+        }), 0);
       } catch (e) {
         localStorage.removeItem('user');
       }
@@ -150,10 +150,15 @@ export default function Navbar() {
                         <p className="text-[10px] font-black text-[#a68b6d] uppercase tracking-widest">Logged In As</p>
                         <p className="text-[12px] font-bold text-gray-900 truncate">{user.email}</p>
                       </div>
-                      <Link href="/profile" className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
+                      {user.role === 'admin' && (
+                        <Link href="/admin" className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
+                          Admin Dashboard
+                        </Link>
+                      )}
+                      <Link href={user.role === 'admin' ? '/admin/profile' : '/profile'} className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
                         My Profile
                       </Link>
-                      <Link href="/orders" className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
+                      <Link href={user.role === 'admin' ? '/admin/orders' : '/orders'} className="flex items-center px-4 py-3 text-[11px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg transition-all uppercase">
                         Orders
                       </Link>
                       <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-[11px] font-bold text-red-500 hover:bg-red-50 rounded-lg transition-all uppercase gap-2">

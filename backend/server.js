@@ -21,6 +21,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'UP', database: 'Connect
 // Routes
 app.use('/api', require('./routes/authRoutes'));
 app.use('/api', require('./routes/productRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ error: `${req.method} ${req.url} not found` }));

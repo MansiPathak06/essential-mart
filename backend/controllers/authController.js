@@ -14,7 +14,7 @@ const signup = async (req, res) => {
             return res.status(400).json({ error: 'Email already registered' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const adminEmails = ['admin@essential.com', 'admin@ecommerce.com'];
+        const adminEmails = ['admin@essential.com', 'admin@ecommerce.com', 'admin@gmail.com'];
         const role = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'user';
 
         const result = await pool.query(
@@ -66,15 +66,17 @@ const login = async (req, res) => {
         if (!isMatch)
             return res.status(401).json({ error: 'Invalid email or password' });
 
+        const role = (user.role || 'user').toLowerCase();
+
         const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
+            { id: user.id, email: user.email, role },
             process.env.JWT_SECRET || 'essential_mart_secret',
             { expiresIn: '7d' }
         );
 
         res.json({
             token,
-            user: { id: user.id, email: user.email, role: user.role },
+            user: { id: user.id, email: user.email, role },
         });
     } catch (err) {
         console.error('Login Error:', err.message);

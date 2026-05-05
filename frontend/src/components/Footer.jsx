@@ -40,7 +40,7 @@ export default function Footer() {
               Maison
             </h2>
             <p className="text-xs leading-relaxed max-w-[240px] font-light mx-auto lg:mx-0">
-              Timeless fashion, consciously made. Luxury doesn't have to cost the earth.
+              Timeless fashion, consciously made. Luxury does not have to cost the earth.
             </p>
           </div>
 
@@ -68,7 +68,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-[9px] text-gray-600 uppercase tracking-[0.2em]">
-            © 2026 Maison. All rights reserved.
+            Copyright 2026 Maison. All rights reserved.
           </div>
           <div className="flex gap-8">
             {["Privacy", "Terms", "Cookies"].map((legal) => (

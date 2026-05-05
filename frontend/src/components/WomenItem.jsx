@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -21,14 +23,6 @@ const WomenItem = () => {
   ];
 
   
-
-// ... inside map function, button par onClick lagayein:
-<button 
-  onClick={() => handleAddToCart(product)}
-  className="w-full mt-3 bg-gray-900 text-white py-2 rounded-xl flex items-center justify-center gap-2 text-xs font-bold hover:bg-cyan-500 transition-colors"
->
-  <ShoppingBag size={14} /> Add to Cart
-</button>
 
 // ==================== ADD TO CART ====================
 const handleAddToCart = async (product) => {
@@ -59,7 +53,7 @@ const handleAddToCart = async (product) => {
     } else {
       alert("Failed to add to cart");
     }
-  } catch (err) {
+  } catch {
     alert("Backend server chal raha hai? (node server.js)");
   }
 };

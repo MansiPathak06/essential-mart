@@ -24,7 +24,7 @@ async function createAdmin() {
       data: {
         email: "admin@gmail.com",
         password: hashed,
-        role: "ADMIN",
+        role: "admin",
       },
     });
 

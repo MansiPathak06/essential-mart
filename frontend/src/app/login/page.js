@@ -38,8 +38,8 @@ export default function AuthPage() {
           localStorage.setItem('user',  JSON.stringify(userObj));
           localStorage.setItem('token', data.token || '');
 
-          if (data.user.role === 'admin') {
-            window.location.href = '/admin/add-product';
+          if ((data.user.role || '').toLowerCase() === 'admin') {
+            window.location.href = '/admin';
           } else {
             window.location.href = '/women-store';
           }
