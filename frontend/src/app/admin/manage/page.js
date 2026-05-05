@@ -16,10 +16,12 @@ export default function ManageProductsPage() {
     fetchProducts();
   }, []);
 
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
   async function fetchProducts() {
     setLoading(true);
     try {
-      const res = await fetch('/api/products');
+      const res = await fetch(`${BASE_URL}/api/products`);
       const data = await res.json();
       setProducts(data);
       setFiltered(data);
@@ -40,7 +42,7 @@ export default function ManageProductsPage() {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      await fetch(`${BASE_URL}/api/products/${id}`, { method: 'DELETE' });
       setDeleteConfirm(null);
       fetchProducts();
     } catch (err) {
@@ -178,8 +180,9 @@ function EditProductModal({ product, onClose, onSaved }) {
   });
 
   const handleSave = async () => {
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     try {
-      await fetch(`/api/products/${product.id}`, {
+      await fetch(`${BASE_URL}/api/products/${product.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

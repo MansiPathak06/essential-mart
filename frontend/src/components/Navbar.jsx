@@ -38,19 +38,22 @@ export default function Navbar() {
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
+        // users table has no name column — derive display name from email
+        const displayName = parsed.email ? parsed.email.split('@')[0] : 'User';
         setUser({
-          name: parsed.name || "User",
-          email: parsed.email || "",
-          role: parsed.role || "USER",
+          name:  displayName,
+          email: parsed.email || '',
+          role:  parsed.role  || 'user',
         });
       } catch (e) {
-        console.error("Auth Error", e);
+        localStorage.removeItem('user');
       }
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setUser(null);
     router.push('/login');
   };

@@ -24,7 +24,8 @@ export default function CategorySection() {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const res = await fetch("/api/products");
+        const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${BASE_URL}/api/products`);
         const data = await res.json();
         const products = Array.isArray(data) ? data : [];
 

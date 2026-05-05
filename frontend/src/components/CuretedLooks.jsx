@@ -3,7 +3,6 @@ import React from 'react';
 import { ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
-// Updated data with category field
 const looks = [
   {
     id: 1,
@@ -42,57 +41,57 @@ const CuratedLooks = () => {
     switch (size) {
       case 'small': return 'aspect-[3/4]';
       case 'medium': return 'aspect-[3/4.5]';
-      case 'large': return 'aspect-[3/5.2]';
+      case 'large': return 'aspect-[3/5]';
       default: return 'aspect-[3/4]';
     }
   };
 
   const getWidth = (size) => {
     switch (size) {
-      case 'small': return 'w-[14%]';
-      case 'medium': return 'w-[20%]';
-      case 'large': return 'w-[26%]';
-      default: return 'w-[18%]';
+      case 'small': return 'w-[12%]';
+      case 'medium': return 'w-[17%]';
+      case 'large': return 'w-[22%]';
+      default: return 'w-[15%]';
     }
   };
 
   const getMt = (size) => {
     switch (size) {
-        case 'small': return 'mt-[10%]';
-        case 'medium': return 'mt-[5%]';
-        case 'large': return 'mt-0';
-        default: return 'mt-0';
+      case 'small': return 'mt-[8%]';
+      case 'medium': return 'mt-[4%]';
+      case 'large': return 'mt-0';
+      default: return 'mt-0';
     }
   };
 
   return (
-    <section className="bg-[#f9f9f9] py-20 px-4 md:px-10">
+    <section className="bg-[#f9f9f9] py-12 px-4 md:px-10">
       <div className="max-w-[1920px] mx-auto">
-        <h2 className="text-center text-[13px] md:text-[15px] font-bold tracking-[0.2em] uppercase text-[#1a1a1a] mb-16 font-sans">
+        <h2 className="text-center text-[12px] md:text-[13px] font-bold tracking-[0.2em] uppercase text-[#1a1a1a] mb-10 font-sans">
           Curated Looks For You
         </h2>
 
         {/* --- DESKTOP VIEW --- */}
-        <div className="hidden md:flex items-start justify-center gap-5">
+        <div className="hidden md:flex items-start justify-center gap-3">
           {looks.map((look, index) => (
-            <div 
-              key={look.id} 
+            <div
+              key={look.id}
               className={`relative flex-shrink-0 group overflow-hidden ${getWidth(look.size)} ${getAspectRatio(look.size)} ${getMt(look.size)}`}
             >
-              <img 
-                src={look.imageUrl} 
-                alt={`Curated Look ${index + 1}`} 
+              <img
+                src={look.imageUrl}
+                alt={`Curated Look ${index + 1}`}
                 className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-105"
               />
-              
-              {/* SHOP ALL BUTTON (Link with Category Logic) */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-                <Link 
+
+              {/* SHOP ALL BUTTON */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full flex justify-center">
+                <Link
                   href={`/${(look.category || 'women').toLowerCase()}-store`}
-                  className="flex items-center gap-2.5 bg-white/95 backdrop-blur-sm px-6 py-3 shadow-lg rounded-full transition-all duration-300 hover:bg-black group-hover:bottom-8"
+                  className="flex items-center gap-2 bg-white px-4 py-2 shadow-md transition-all duration-300 hover:bg-black hover:text-white"
                 >
-                  <ShoppingBag className="w-4 h-4 text-[#1a1a1a] transition-colors duration-300 group-hover:text-white" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#1a1a1a] transition-colors duration-300 group-hover:text-white">
+                  <ShoppingBag className="w-3 h-3 text-[#1a1a1a] group-hover:text-white transition-colors duration-300" />
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-[#1a1a1a] hover:text-white transition-colors duration-300 whitespace-nowrap">
                     Shop All
                   </span>
                 </Link>
@@ -101,30 +100,30 @@ const CuratedLooks = () => {
           ))}
         </div>
 
-        {/* --- MOBILE VIEW (Horizontal Scroll) --- */}
-        <div className="md:hidden flex overflow-x-auto gap-4 pb-6 snap-x snap-mandatory px-4 -mx-4">
-            {looks.map((look, index) => (
-                <div key={look.id} className="relative flex-shrink-0 w-[70vw] aspect-[3/4] snap-center overflow-hidden">
-                     <img 
-                        src={look.imageUrl} 
-                        alt={`Curated Look ${index + 1}`} 
-                        className="w-full h-full object-cover"
-                     />
-                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                        <Link 
-                            href={`/${(look.category || 'women').toLowerCase()}-store`}
-                            className="flex items-center gap-2 bg-white px-5 py-2.5 shadow-md rounded-full"
-                        >
-                            <ShoppingBag className="w-3.5 h-3.5 text-black" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-black">
-                                Shop All
-                            </span>
-                        </Link>
-                    </div>
-                </div>
-            ))}
+        {/* --- MOBILE VIEW --- */}
+        <div className="md:hidden flex overflow-x-auto gap-3 pb-4 snap-x snap-mandatory px-4 -mx-4">
+          {looks.map((look, index) => (
+            <div key={look.id} className="relative flex-shrink-0 w-[65vw] aspect-[3/4] snap-center overflow-hidden">
+              <img
+                src={look.imageUrl}
+                alt={`Curated Look ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
+                <Link
+                  href={`/${(look.category || 'women').toLowerCase()}-store`}
+                  className="flex items-center gap-1.5 bg-white px-4 py-2 shadow-md"
+                >
+                  <ShoppingBag className="w-3 h-3 text-black" />
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-black whitespace-nowrap">
+                    Shop All
+                  </span>
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
-        
+
       </div>
     </section>
   );
