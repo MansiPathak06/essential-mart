@@ -28,17 +28,15 @@ export default function Home() {
   }, []);
 
   return (
-    <main>
+    <div>
       <HeroSection />
       <CategorySection />
-      {/* Ab data pass karein taaki empty na dikhe */}
-      <FeaturedProduct products={featuredData} /> 
+      <FeaturedProduct products={featuredData} />
       <EditorialSection />
       <CuretedLooks />
       <ClothingShowcase />
       <PromoBanners />
-    
-    </main>
+    </div>
   );
 
 }

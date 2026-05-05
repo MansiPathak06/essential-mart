@@ -15,7 +15,7 @@ export default function RootLayout({ children }) {
         <Navbar />
         
         {/* children ka matlab hai page.js ka content yahan load hoga */}
-        <main className="pt-16"> 
+        <main className="pt-16 md:pt-20">
           {children}
         </main>
         <Footer/>

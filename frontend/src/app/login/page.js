@@ -15,7 +15,8 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
 
-    const endpoint = isLogin ? '/api/login' : '/api/signup';
+    const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const endpoint = isLogin ? `${BASE_URL}/api/login` : `${BASE_URL}/api/signup`;
 
     try {
       const response = await fetch(endpoint, {
@@ -27,28 +28,27 @@ export default function AuthPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // ==================== FIXED STORAGE ====================
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user_id', data.user.id);     // ← Yeh line add ki
-        localStorage.setItem('role', data.user.role || 'user');
-        localStorage.setItem('email', data.user.email);
-
         if (isLogin) {
-          if (email === 'admin@essential.com' || data.user.role === 'admin') {
-            alert("Welcome Admin! 🎉");
-            setTimeout(() => {
-              window.location.href = '/admin/add-product';
-            }, 300);
+          // Save user object for Navbar to read
+          const userObj = {
+            id:    data.user.id,
+            email: data.user.email,
+            role:  data.user.role || 'user',
+          };
+          localStorage.setItem('user',  JSON.stringify(userObj));
+          localStorage.setItem('token', data.token || '');
+
+          if (data.user.role === 'admin') {
+            window.location.href = '/admin/add-product';
           } else {
-            alert("Login Successful! Welcome back ❤️");
-            window.location.href = '/women-store';   // Ya jahan aap chahein
+            window.location.href = '/women-store';
           }
         } else {
-          alert("Account created! Now please login.");
+          alert("Account created! Please login.");
           setIsLogin(true);
         }
       } else {
-        alert("Error: " + (data.error || "Invalid credentials"));
+        alert("Error: " + (data.error || "Something went wrong"));
       }
     } catch (err) {
       console.error(err);
