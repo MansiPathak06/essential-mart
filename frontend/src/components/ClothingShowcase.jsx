@@ -5,77 +5,77 @@ import { ShoppingBag, ArrowRight, ShieldCheck, Award } from 'lucide-react';
 
 const ClothingShowcase = () => {
   const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
 
   return (
-    <section className="w-full bg-black py-12 md:py-20 px-4 md:px-10 min-h-screen flex items-center justify-center">
+    <section className="w-full bg-[#080808] py-8 md:py-14 px-4 md:px-10 flex items-center justify-center">
       
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch w-full border border-white/10 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl bg-[#0a0a0a]">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-stretch w-full overflow-hidden bg-[#0a0a0a] border border-white/8">
         
-        {/* ✅ FIXED VIDEO SECTION */}
-        <div className="w-full md:w-1/2 relative h-[300px] sm:h-[350px] md:h-auto bg-[#111]">
-          <video 
-            autoPlay 
-            muted 
-            loop 
+        {/* VIDEO SECTION */}
+        <div className="w-full md:w-[45%] relative h-[240px] sm:h-[280px] md:h-auto bg-[#111]">
+          <video
+            autoPlay
+            muted
+            loop
             playsInline
-            className="absolute inset-0 w-full h-full object-cover opacity-100 md:opacity-70"
+            className="absolute inset-0 w-full h-full object-cover opacity-80"
           >
             <source src="https://v1.pinimg.com/videos/mc/720p/86/12/67/861267992ff77fc85591f7b7df558365.mp4" type="video/mp4" />
           </video>
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0a0a0a]/60" />
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center p-6 sm:p-10 md:p-16 lg:p-20 bg-black text-white">
-          <motion.div 
+        <div className="w-full md:w-[55%] flex flex-col justify-center px-6 py-8 md:px-12 md:py-10 bg-[#0a0a0a] text-white">
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="space-y-5 md:space-y-8"
+            className="space-y-4 md:space-y-5"
           >
-            <motion.span variants={fadeInUp} className="text-[#C5A27D] uppercase tracking-[0.2em] md:tracking-[0.3em] text-[10px] md:text-xs font-bold block">
+            {/* Eyebrow */}
+            <motion.span variants={fadeInUp} className="text-[#C5A27D] uppercase tracking-[0.25em] text-[9px] md:text-[10px] font-bold block">
               The Heritage Collection
             </motion.span>
 
-            <motion.h2 variants={fadeInUp} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif leading-tight text-white">
-              Where Fabric <br className="hidden md:block" /> Meets <span className="italic text-[#C5A27D]">story</span>
+            {/* Heading */}
+            <motion.h2 variants={fadeInUp} className="text-2xl sm:text-3xl md:text-4xl font-serif leading-snug text-white">
+              Where Fabric <br className="hidden md:block" />
+              Meets <span className="italic text-[#C5A27D]">Story</span>
             </motion.h2>
 
-            <motion.p variants={fadeInUp} className="text-gray-400 text-sm md:text-lg leading-relaxed max-w-md">
+            {/* Description */}
+            <motion.p variants={fadeInUp} className="text-gray-400 text-xs md:text-sm leading-relaxed max-w-sm">
               Essential Mart brings you curated clothing that blends traditional craftsmanship with modern silhouettes.
             </motion.p>
 
-            <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-4 md:gap-6 py-4">
-              <div className="flex items-center gap-3 md:gap-4 group">
-                <div className="p-2.5 md:p-3 rounded-full border border-gray-800 group-hover:border-[#C5A27D] transition-colors">
-                  <ShieldCheck size={16} className="text-[#C5A27D]" />
+            {/* Features */}
+            <motion.div variants={fadeInUp} className="flex flex-col gap-3 py-2">
+              {[
+                { icon: ShieldCheck, label: 'Sustainably Sourced Fabric' },
+                { icon: Award, label: 'Premium Quality Assurance' },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-3 group">
+                  <div className="p-2 border border-white/10 group-hover:border-[#C5A27D] transition-colors">
+                    <Icon size={13} className="text-[#C5A27D]" />
+                  </div>
+                  <span className="text-[11px] md:text-xs font-medium tracking-wide text-gray-300">
+                    {label}
+                  </span>
                 </div>
-                <span className="text-xs md:text-sm font-medium tracking-wide text-gray-200">
-                  Sustainably Sourced Fabric
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3 md:gap-4 group">
-                <div className="p-2.5 md:p-3 rounded-full border border-gray-800 group-hover:border-[#C5A27D] transition-colors">
-                  <Award size={16} className="text-[#C5A27D]" />
-                </div>
-                <span className="text-xs md:text-sm font-medium tracking-wide text-gray-200">
-                  Premium Quality Assurance
-                </span>
-              </div>
+              ))}
             </motion.div>
 
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 md:gap-5 pt-2">
-              <button className="w-full sm:w-auto bg-[#C5A27D] text-black px-8 py-3.5 md:py-4 rounded-sm font-bold uppercase text-[10px] md:text-xs tracking-widest hover:bg-[#d4b594] transition-all flex items-center justify-center gap-2">
-                Explore Now <ShoppingBag size={14} />
+            {/* CTA Buttons */}
+            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-3 pt-1">
+              <button className="w-full sm:w-auto bg-[#C5A27D] text-black px-7 py-2.5 font-bold uppercase text-[9px] tracking-widest hover:bg-[#d4b594] transition-all flex items-center justify-center gap-2">
+                Explore Now <ShoppingBag size={12} />
               </button>
-
-              <button className="w-full sm:w-auto border border-white/20 text-white px-8 py-3.5 md:py-4 rounded-sm font-bold uppercase text-[10px] md:text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2">
-                View Lookbook <ArrowRight size={14} />
+              <button className="w-full sm:w-auto border border-white/20 text-white px-7 py-2.5 font-bold uppercase text-[9px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2">
+                View Lookbook <ArrowRight size={12} />
               </button>
             </motion.div>
           </motion.div>

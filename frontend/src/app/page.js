@@ -17,7 +17,7 @@ export default function Home() {
     // Database se top products fetch karein
     const fetchFeatured = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/products?limit=4");
+        const res = await fetch("http://localhost:5000/api/products?limit=8");
         const data = await res.json();
         setFeaturedData(data);
       } catch (err) {
