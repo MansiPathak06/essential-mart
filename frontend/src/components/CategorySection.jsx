@@ -1,65 +1,63 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-const catMap = {
-  "Bridal Wear":      { img: "https://i.pinimg.com/736x/f9/15/95/f9159551d1202c728afe2f918d5a3521.jpg", href: "/bridal-wear" },
-  "Essential Bridal": { img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&q=80", href: "/essential-bridal" },
-  "Groom Footwear":   { img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80", href: "/groom-footwear" },
-  "Bridal Footwear":  { img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&q=80", href: "/bridal-footwear" },
-  "Bridal Accessories":{ img: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&q=80", href: "/bridal-accessories" },
-  "Groom Accessories":{ img: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80", href: "/groom-accessories" },
-  "Makeup & Hair":    { img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&q=80", href: "/makeup-hair" },
-  "Gifts":            { img: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80", href: "/gifts", featured: true },
-  "Ritual Items":     { img: "https://images.unsplash.com/photo-1614886137-b6a95e42571f?w=400&q=80", href: "/ritual-items" },
-  "Bridal Jewellery": { img: "https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=400&q=80", href: "/bridal-jewellery" },
-};
+const groups = [
+  {
+    label: "Men",
+    accent: "#5c4a32",
+    href: "/men-store",
+    categories: [
+      { name: "Jeans",        img: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&q=80",  href: "/men-store?cat=jeans" },
+      { name: "Shirts",       img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&q=80", href: "/men-store?cat=shirts" },
+      { name: "Kurtas",       img: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&q=80", href: "/men-store?cat=kurtas" },
+      { name: "Tshirts",      img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&q=80", href: "/men-store?cat=tshirts" },
+      { name: "Sherwani",     img: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80", href: "/men-store?cat=sherwani" },
+      { name: "Boots",        img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80",  href: "/men-store?cat=boots" },
+    ],
+  },
+  {
+    label: "Women",
+    accent: "#8b5e52",
+    href: "/women-store",
+    categories: [
+      { name: "Sarees",    img: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400&q=80", href: "/women-store?cat=sarees" },
+      { name: "Lehengas",  img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&q=80", href: "/women-store?cat=lehengas" },
+      { name: "Kurtis",    img: "https://images.unsplash.com/photo-1614886137-b6a95e42571f?w=400&q=80",   href: "/women-store?cat=kurtis" },
+      { name: "Dresses",   img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&q=80", href: "/women-store?cat=dresses" },
+      { name: "Heels",     img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80",   href: "/women-store?cat=heels" },
+      { name: "Necklaces", img: "https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=400&q=80", href: "/women-store?cat=necklaces" },
+    ],
+  },
+  {
+    label: "Kids",
+    accent: "#4a7c6f",
+    href: "/kids-store",
+    categories: [
+      { name: "Boys T-Shirts",  img: "https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=400&q=80",  href: "/kids-store?cat=boys-tshirts" },
+      { name: "Boys Jeans",     img: "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=400&q=80", href: "/kids-store?cat=boys-jeans" },
+      { name: "Boys Shirts",    img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&q=80", href: "/kids-store?cat=shirts" },
+      { name: "Girls Dresses",  img: "https://i.pinimg.com/736x/64/6a/1e/646a1edf3ac1f7c1abab2bb6eb17f604.jpg", href: "/kids-store?cat=girls-dresses" },
+      { name: "Girls Tops",     img: "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=400&q=80",  href: "/kids-store?cat=girls-tops" },
+      { name: "Footwear",       img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80",    href: "/kids-store?cat=footwear" },
+    ],
+  },
+];
 
 export default function CategorySection() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${BASE_URL}/api/products`);
-        const data = await res.json();
-        const products = Array.isArray(data) ? data : [];
-
-        const finalData = Object.entries(catMap).map(([name, meta]) => {
-          const count = products.filter(
-            (p) => p.category?.toLowerCase() === name.toLowerCase()
-          ).length;
-          return { name, count: `${count} pieces`, ...meta };
-        });
-
-        setCategories(finalData);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchCategories();
-  }, []);
-
-  if (loading || categories.length === 0) return null;
-
   return (
     <section
-      className="relative py-12 px-10 overflow-hidden"
+      className="py-6 px-6 md:px-14"
       style={{ background: "linear-gradient(135deg, #fdfaf4 0%, #f5f0e8 50%, #fdf8f0 100%)" }}
     >
       {/* Header */}
-      <div className="flex items-end justify-between mb-8">
+      <div className="flex items-end justify-between mb-5">
         <div>
-          <span className="block text-[10px] font-semibold tracking-[0.45em] uppercase text-[#b85c38] mb-1.5">
-            Curated for you
+          <span className="block text-[10px] font-semibold tracking-[0.45em] uppercase text-[#b85c38] mb-1">
+            Browse
           </span>
-          <h2 className="font-serif text-[34px] font-normal text-[#1a1410] leading-tight">
+          <h2 className="font-serif text-[24px] font-normal text-[#1a1410] leading-tight">
             Shop by <em className="italic opacity-70">Category</em>
           </h2>
         </div>
@@ -67,89 +65,54 @@ export default function CategorySection() {
           href="/all-collections"
           className="text-[10px] font-semibold tracking-[0.3em] uppercase border-b border-[#1a1410] pb-0.5 hover:text-[#b85c38] hover:border-[#b85c38] transition-colors"
         >
-          View All Collections
+          View All
         </Link>
       </div>
 
-      {/* Grid — 5 columns, 2 rows */}
-      <div className="grid grid-cols-5 gap-x-4 gap-y-6">
-        {categories.map((cat) => (
-          <CategoryCard key={cat.name} cat={cat} />
+      <div className="space-y-5">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: group.accent }}>
+                {group.label}
+              </span>
+              <div className="h-px flex-1 bg-[#1a1410]/10" />
+              <Link href={group.href} className="text-[9px] uppercase tracking-widest font-semibold text-[#1a1410]/40 hover:text-[#b85c38] transition-colors">
+                See All →
+              </Link>
+            </div>
+
+            <div className="flex justify-between gap-2">
+              {group.categories.map((cat) => (
+                <Link key={cat.name} href={cat.href} className="flex flex-col items-center gap-1.5 group flex-1">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 22 }}
+                    className="relative overflow-hidden rounded-full mx-auto"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      border: "2px solid rgba(201,169,110,0.35)",
+                      boxShadow: "0 3px 12px rgba(26,20,16,0.08)",
+                    }}
+                  >
+                    <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" />
+                    <div
+                      className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{ background: "linear-gradient(135deg, rgba(201,169,110,0.28) 0%, rgba(184,92,56,0.18) 100%)" }}
+                    />
+                  </motion.div>
+                  <span className="text-center text-[11px] font-semibold tracking-wide leading-tight text-[#1a1410] group-hover:text-[#b85c38] transition-colors duration-200">
+                    {cat.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Bottom gold divider */}
-      <div
-        className="mt-8 mx-auto w-12 h-px"
-        style={{ background: "linear-gradient(to right, transparent, #c9a96e, transparent)" }}
-      />
+      <div className="mt-6 mx-auto w-12 h-px" style={{ background: "linear-gradient(to right, transparent, #c9a96e, transparent)" }} />
     </section>
-  );
-}
-
-function CategoryCard({ cat }) {
-  return (
-    <Link href={cat.href} className="flex flex-col items-center gap-2.5 group">
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        transition={{ type: "spring", stiffness: 280, damping: 22 }}
-        className="relative overflow-hidden rounded-full"
-        style={{
-          // ✅ Fixed smaller size — no longer full width
-          width: "160px",
-          height: "160px",
-          border: cat.featured
-            ? "2.5px solid #c9a96e"
-            : "1.5px solid rgba(201,169,110,0.3)",
-          boxShadow: cat.featured
-            ? "0 0 0 3px rgba(201,169,110,0.15), 0 4px 18px rgba(26,20,16,0.10)"
-            : "0 3px 14px rgba(26,20,16,0.07)",
-        }}
-      >
-        <img
-          src={cat.img}
-          alt={cat.name}
-          className="w-full h-full object-cover"
-        />
-
-        {/* ✅ Hover gradient overlay — warm gold shimmer */}
-        <div
-          className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(201,169,110,0.22) 0%, rgba(184,92,56,0.15) 100%)",
-          }}
-        />
-
-        {/* Featured Explore pill */}
-        {cat.featured && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span
-              className="px-3.5 py-1 rounded-full text-[9px] font-medium tracking-widest uppercase text-white"
-              style={{
-                background: "rgba(255,255,255,0.15)",
-                backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.4)",
-              }}
-            >
-              Explore
-            </span>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Label */}
-      <div className="text-center">
-        <span
-          className="block font-serif text-[13.5px] font-semibold tracking-wide transition-colors duration-200 group-hover:text-[#b85c38]"
-          style={{ color: cat.featured ? "#c9a96e" : "#1a1410" }}
-        >
-          {cat.name}
-        </span>
-        <span className="block text-[10px] text-[#7a6a5a] mt-0.5 tracking-wide">
-          {cat.count}
-        </span>
-      </div>
-    </Link>
   );
 }

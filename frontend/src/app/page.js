@@ -22,7 +22,7 @@ export default function Home() {
         setFeaturedData(data);
       } catch (err) {
         console.error("Data fetch error:", err);
-      }
+      }c
     };
     fetchFeatured();
   }, []);
