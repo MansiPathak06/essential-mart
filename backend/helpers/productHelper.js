@@ -19,18 +19,30 @@ const formatProduct = (row) => {
         id: row.id,
         name: row.name || 'Unnamed Product',
         category: (row.category || '').toLowerCase(),
+
+        // snake_case (backend ke liye)
         sub_category: row.sub_category || 'general',
         original_price: oPrice,
         discounted_price: dPrice,
+        in_stock: row.in_stock ?? true,
+
+        // camelCase (frontend ke liye)
+        subCategory: row.sub_category || 'general',
+        originalPrice: oPrice,
+        discountedPrice: dPrice > 0 ? dPrice : oPrice,
+        inStock: row.in_stock ?? true,
+
         price: dPrice > 0 ? dPrice : oPrice,
         images: parsedImages,
         image_url: parsedImages[0] || '/placeholder.jpg',
         discount: oPrice > 0 ? Math.round(((oPrice - dPrice) / oPrice) * 100) : 0,
-        in_stock: row.in_stock ?? true,
         fabric: row.fabric || 'Premium Fabric',
         rating: parseFloat(row.rating) || 4.5,
         short_description: row.short_description || '',
         full_description: row.full_description || '',
+        reviewer_name: row.reviewer_name || '',
+        reviewer_rating: row.reviewer_rating || 4.2,
+        reviewer_review: row.reviewer_review || '',
         created_at: row.created_at,
     };
 };

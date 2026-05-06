@@ -19,7 +19,7 @@ export default function Home() {
       try {
         const res = await fetch("http://localhost:5000/api/products?limit=8");
         const data = await res.json();
-        setFeaturedData(data);
+        setFeaturedData(Array.isArray(data) ? data : data.products || data.items || []);
       } catch (err) {
         console.error("Data fetch error:", err);
       }c

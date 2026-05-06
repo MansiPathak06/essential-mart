@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
 export const metadata = {
@@ -11,14 +12,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="antialiased">
-        {/* Navbar yahan rahega taaki har page par dikhe */}
-        <Navbar />
-        
-        {/* children ka matlab hai page.js ka content yahan load hoga */}
-        <main className="pt-16 md:pt-20">
-          {children}
-        </main>
-        <Footer/>
+        <CartProvider>
+          {/* CartProvider ke andar hona chahiye — Navbar + children dono */}
+          <Navbar />
+          <main className="pt-16 md:pt-20">
+            {children}
+          </main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );
