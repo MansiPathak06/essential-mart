@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Heart, Filter, X, ChevronRight, TrendingUp, Zap, Award, Sparkles } from "lucide-react";
+import { Heart, Filter, X, ChevronRight, TrendingUp, Zap, Award, Sparkles, ShoppingBag, Check } from "lucide-react";
 import WomenItem from "@/components/WomenItem";
+import { useCart } from "@/context/CartContext";
+import LoginModal from "@/components/LoginModal";
 
 const FILTER_DATA = {
   categories: [
@@ -38,39 +40,69 @@ const CAROUSEL_IMAGES = [
 ];
 
 const EDITORIAL_GRID = [
-  {
-    label: "New In",
-    title: "Ethnic Edit",
-    sub: "Festive & Bridal Picks",
-    img: "https://i.pinimg.com/736x/1d/a1/49/1da1496ed219e18142563cecd8606ffa.jpg",
-    size: "large",
-    href: "/women-store?subcategory=ethnic-sets",
-  },
-  {
-    label: "Trending",
-    title: "Western Chic",
-    sub: "Dresses & Co-ords",
-    img: "https://i.pinimg.com/736x/ab/da/dd/abdadd2dad5fe0ba1896353d71d1d5ee.jpg",
-    size: "small",
-    href: "/women-store?subcategory=dresses",
-  },
-  {
-    label: "Bestseller",
-    title: "Kurta Season",
-    sub: "Everyday Elegance",
-    img: "https://i.pinimg.com/736x/83/d7/df/83d7dff09cd476a88df35afd2df93ec2.jpg",
-    size: "small",
-    href: "/women-store?subcategory=kurtas",
-  },
+  { label: "New In", title: "Ethnic Edit", sub: "Festive & Bridal Picks", img: "https://i.pinimg.com/736x/1d/a1/49/1da1496ed219e18142563cecd8606ffa.jpg", href: "/women-store?subcategory=ethnic-sets" },
+  { label: "Trending", title: "Western Chic", sub: "Dresses & Co-ords", img: "https://i.pinimg.com/736x/ab/da/dd/abdadd2dad5fe0ba1896353d71d1d5ee.jpg", href: "/women-store?subcategory=dresses" },
+  { label: "Bestseller", title: "Kurta Season", sub: "Everyday Elegance", img: "https://i.pinimg.com/736x/83/d7/df/83d7dff09cd476a88df35afd2df93ec2.jpg", href: "/women-store?subcategory=kurtas" },
 ];
 
 const STYLE_BANNERS = [
-  { label: "Festive",    title: "Bridal Picks",    sub: "Lehengas & Sarees",      img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&q=80" },
-  { label: "Casual",     title: "Everyday Wear",   sub: "Tops, Kurtas & More",    img: "https://images.unsplash.com/photo-1562572159-4efc207f5aff?w=600&q=80" },
-  { label: "Work",       title: "Office Ready",    sub: "Suits & Formal Sets",    img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80" },
+  { label: "Festive",  title: "Bridal Picks",  sub: "Lehengas & Sarees",   img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&q=80" },
+  { label: "Casual",   title: "Everyday Wear", sub: "Tops, Kurtas & More", img: "https://images.unsplash.com/photo-1562572159-4efc207f5aff?w=600&q=80" },
+  { label: "Work",     title: "Office Ready",  sub: "Suits & Formal Sets", img: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80" },
 ];
 
 const WRAPPER = "max-w-[1440px] mx-auto px-6 md:px-14";
+
+// ── Product Card ──────────────────────────────────────────────────────────
+function ProductCard({ item, onAddToCart, cartLoading, cartAdded }) {
+  const router = useRouter();
+  const isAdded = cartAdded === item.id;
+  const isLoading = cartLoading === item.id;
+
+  return (
+    <div
+      onClick={() => router.push(`/product/${item.id}`)}
+      className="group cursor-pointer bg-white border border-[#f0e8e0] overflow-hidden hover:shadow-md transition-all"
+    >
+      <div className="aspect-[3/4] overflow-hidden relative">
+        <img
+          src={item.images?.[0] || item.image_url || '/placeholder.jpg'}
+          alt={item.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+        />
+        {item.original_price > item.price && (
+          <span className="absolute top-3 left-3 bg-[#c9845a] text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">Sale</span>
+        )}
+        {/* Quick Add */}
+        <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <button
+            onClick={e => { e.stopPropagation(); onAddToCart(item.id); }}
+            disabled={isLoading || !item.in_stock}
+            className={`w-full py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+              isAdded ? 'bg-green-600 text-white' :
+              !item.in_stock ? 'bg-gray-300 text-gray-500 cursor-not-allowed' :
+              'bg-[#1a0e0a] text-white hover:bg-[#c9845a]'
+            }`}
+          >
+            {isAdded ? <><Check size={13} /> Added!</> :
+             isLoading ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Adding...</> :
+             !item.in_stock ? 'Out of Stock' :
+             <><ShoppingBag size={13} /> Quick Add</>}
+          </button>
+        </div>
+      </div>
+      <div className="p-3 border-t border-[#f0e8e0]">
+        <h3 className="text-[12px] font-semibold text-[#1a0e0a] truncate mb-1.5">{item.name}</h3>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-[14px] text-[#1a0e0a]">₹{item.price.toLocaleString()}</span>
+          {item.original_price > item.price && (
+            <span className="text-[11px] text-[#9a8a7a] line-through">₹{item.original_price.toLocaleString()}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function WomenStoreContent() {
   const router = useRouter();
@@ -78,15 +110,20 @@ function WomenStoreContent() {
   const subCategory = searchParams.get("subcategory");
   const isViewAll = searchParams.get("view") === "all";
 
+  const { addToCart } = useCart();
+
   const [rawProducts, setRawProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [wishlist, setWishlist] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
   const [appliedPriceRange, setAppliedPriceRange] = useState({ min: 0, max: 20000 });
   const [sortBy, setSortBy] = useState("popularity");
+  const [cartLoading, setCartLoading] = useState(null);
+  const [cartAdded, setCartAdded] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [pendingProductId, setPendingProductId] = useState(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -131,7 +168,6 @@ function WomenStoreContent() {
     return () => clearInterval(timer);
   }, []);
 
-  const toggleWishlist = (id) => setWishlist(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
   const clearAllFilters = () => {
     setSelectedCategories([]);
     setPriceRange({ min: 0, max: 20000 });
@@ -139,11 +175,33 @@ function WomenStoreContent() {
     router.push("/women-store");
   };
 
+  const doAddToCart = async (productId) => {
+    setCartLoading(productId);
+    const result = await addToCart(productId);
+    setCartLoading(null);
+    if (result.success) {
+      setCartAdded(productId);
+      setTimeout(() => setCartAdded(null), 2000);
+    } else {
+      alert(result.error || 'Cart mein add nahi ho saka!');
+    }
+  };
+
+  const handleAddToCart = (productId) => {
+    const token = localStorage.getItem('token');
+    if (!token) { setPendingProductId(productId); setShowLoginModal(true); return; }
+    doAddToCart(productId);
+  };
+
   // ─── PRODUCT LISTING VIEW ─────────────────────────────────────────────────
   if (subCategory || isViewAll) {
     return (
       <div className="bg-[#fdfaf8] min-h-screen">
-        {/* Top Bar */}
+        <LoginModal isOpen={showLoginModal}
+          onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
+          onSuccess={() => { if (pendingProductId) { doAddToCart(pendingProductId); setPendingProductId(null); } }}
+          message="Cart mein add karne ke liye login karo" />
+
         <div className="bg-[#1a0e0a] text-white">
           <div className={`${WRAPPER} py-4 flex items-center justify-between`}>
             <div>
@@ -169,7 +227,6 @@ function WomenStoreContent() {
         </div>
 
         <div className={`${WRAPPER} py-8 flex gap-8`}>
-          {/* Sidebar */}
           <aside className="hidden lg:block w-[220px] shrink-0">
             <div className="sticky top-24 space-y-6">
               <div className="flex justify-between items-center pb-3 border-b border-[#ede8e2]">
@@ -181,9 +238,8 @@ function WomenStoreContent() {
                 {FILTER_DATA.categories.map(c => (
                   <label key={c.slug} className="flex items-center gap-2.5 cursor-pointer group">
                     <input type="checkbox" checked={selectedCategories.includes(c.slug)}
-                      onChange={() => setSelectedCategories(p =>
-                        p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug]
-                      )} className="w-3.5 h-3.5 accent-[#c9845a]" />
+                      onChange={() => setSelectedCategories(p => p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug])}
+                      className="w-3.5 h-3.5 accent-[#c9845a]" />
                     <span className="text-[12px] text-[#5a4a3a] group-hover:text-[#1a0e0a] transition-colors">{c.name}</span>
                   </label>
                 ))}
@@ -191,22 +247,17 @@ function WomenStoreContent() {
               <div className="space-y-3 pt-4 border-t border-[#ede8e2]">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#c9845a]">Price Range</p>
                 <div className="flex gap-2">
-                  <input type="number" value={priceRange.min}
-                    onChange={e => setPriceRange(p => ({ ...p, min: +e.target.value }))}
+                  <input type="number" value={priceRange.min} onChange={e => setPriceRange(p => ({ ...p, min: +e.target.value }))}
                     placeholder="Min" className="w-full border border-[#ede8e2] bg-white text-xs px-2 py-1.5 outline-none" />
-                  <input type="number" value={priceRange.max}
-                    onChange={e => setPriceRange(p => ({ ...p, max: +e.target.value }))}
+                  <input type="number" value={priceRange.max} onChange={e => setPriceRange(p => ({ ...p, max: +e.target.value }))}
                     placeholder="Max" className="w-full border border-[#ede8e2] bg-white text-xs px-2 py-1.5 outline-none" />
                 </div>
                 <button onClick={() => setAppliedPriceRange(priceRange)}
-                  className="w-full bg-[#1a0e0a] text-white text-[10px] uppercase tracking-widest py-2.5 hover:bg-[#c9845a] transition-colors">
-                  Apply
-                </button>
+                  className="w-full bg-[#1a0e0a] text-white text-[10px] uppercase tracking-widest py-2.5 hover:bg-[#c9845a] transition-colors">Apply</button>
               </div>
             </div>
           </aside>
 
-          {/* Mobile Drawer */}
           {isFilterOpen && (
             <div className="fixed inset-0 z-[200] bg-white p-6 overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
@@ -217,55 +268,32 @@ function WomenStoreContent() {
                 {FILTER_DATA.categories.map(c => (
                   <label key={c.slug} className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" checked={selectedCategories.includes(c.slug)}
-                      onChange={() => setSelectedCategories(p =>
-                        p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug]
-                      )} className="w-4 h-4 accent-[#c9845a]" />
+                      onChange={() => setSelectedCategories(p => p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug])}
+                      className="w-4 h-4 accent-[#c9845a]" />
                     <span className="text-sm">{c.name}</span>
                   </label>
                 ))}
               </div>
               <button onClick={() => setIsFilterOpen(false)}
-                className="w-full bg-[#1a0e0a] text-white py-3 mt-8 uppercase tracking-widest text-[11px]">
-                Show Results
-              </button>
+                className="w-full bg-[#1a0e0a] text-white py-3 mt-8 uppercase tracking-widest text-[11px]">Show Results</button>
             </div>
           )}
 
-          {/* Product Grid */}
           <section className="flex-1">
             <p className="text-[11px] text-[#9a8a7a] mb-6 uppercase tracking-widest">{filteredProducts.length} results</p>
             {loading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {[...Array(8)].map((_, i) => <div key={i} className="aspect-[3/4] bg-[#f0ece4] animate-pulse" />)}
               </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-20 text-[#9a8a7a]">
+                <div className="text-5xl mb-4">🔍</div>
+                <p className="text-sm uppercase tracking-widest">Koi product nahi mila</p>
+              </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map(item => (
-                  <div key={item.id} className="group cursor-pointer bg-white border border-[#f0ece4]"
-                    onClick={() => router.push(`/product/${item.id}`)}>
-                    <div className="aspect-[3/4] overflow-hidden relative">
-                      <img src={item.images[0] || "/placeholder.jpg"}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={item.name} />
-                      <button onClick={e => { e.stopPropagation(); toggleWishlist(item.id); }}
-                        className="absolute top-3 right-3 w-7 h-7 bg-white flex items-center justify-center shadow-sm">
-                        <Heart size={13} className={wishlist.includes(item.id) ? "fill-red-500 text-red-500" : "text-gray-400"} />
-                      </button>
-                      {item.original_price > item.price && (
-                        <span className="absolute top-3 left-3 bg-[#c9845a] text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
-                          Sale
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-3 border-t border-[#f0ece4]">
-                      <h3 className="text-[12px] font-semibold text-[#1a0e0a] truncate mb-1.5">{item.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[14px] text-[#1a0e0a]">₹{item.price.toLocaleString()}</span>
-                        {item.original_price > item.price && (
-                          <span className="text-[11px] text-[#9a8a7a] line-through">₹{item.original_price.toLocaleString()}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <ProductCard key={item.id} item={item} onAddToCart={handleAddToCart} cartLoading={cartLoading} cartAdded={cartAdded} />
                 ))}
               </div>
             )}
@@ -278,8 +306,12 @@ function WomenStoreContent() {
   // ─── HOMEPAGE VIEW ────────────────────────────────────────────────────────
   return (
     <div className="bg-white min-h-screen">
+      <LoginModal isOpen={showLoginModal}
+        onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
+        onSuccess={() => { if (pendingProductId) { doAddToCart(pendingProductId); setPendingProductId(null); } }}
+        message="Cart mein add karne ke liye login karo" />
 
-      {/* HERO CAROUSEL — compact */}
+      {/* HERO */}
       <section className="relative w-full h-[200px] md:h-[280px] overflow-hidden">
         {CAROUSEL_IMAGES.map((img, idx) => (
           <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? "opacity-100" : "opacity-0"}`}>
@@ -318,11 +350,9 @@ function WomenStoreContent() {
       {/* SHOP BY CATEGORY */}
       <section className="py-10 bg-[#fdfaf4]">
         <div className={WRAPPER}>
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.4em] text-[#c9845a] font-semibold mb-1">Browse</p>
-              <h2 className="font-serif text-2xl text-[#1a0e0a] italic font-light">Shop by Category</h2>
-            </div>
+          <div className="mb-6">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-[#c9845a] font-semibold mb-1">Browse</p>
+            <h2 className="font-serif text-2xl text-[#1a0e0a] italic font-light">Shop by Category</h2>
           </div>
           <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
             {CATEGORIES.map(cat => (
@@ -331,9 +361,7 @@ function WomenStoreContent() {
                 <div className="w-full aspect-square overflow-hidden rounded-full border-2 border-[#ede8e2] group-hover:border-[#c9845a] transition-all duration-300">
                   <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wide text-[#1a0e0a] group-hover:text-[#c9845a] transition-colors text-center">
-                  {cat.name}
-                </span>
+                <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-wide text-[#1a0e0a] group-hover:text-[#c9845a] transition-colors text-center">{cat.name}</span>
               </button>
             ))}
           </div>
@@ -343,15 +371,11 @@ function WomenStoreContent() {
       {/* EDITORIAL GRID */}
       <section className="py-10 bg-white">
         <div className={WRAPPER}>
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.4em] text-[#c9845a] font-semibold mb-1">Curated</p>
-              <h2 className="font-serif text-2xl text-[#1a0e0a] italic font-light">The Edit</h2>
-            </div>
+          <div className="mb-6">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-[#c9845a] font-semibold mb-1">Curated</p>
+            <h2 className="font-serif text-2xl text-[#1a0e0a] italic font-light">The Edit</h2>
           </div>
-          {/* Asymmetric grid: 1 large left + 2 stacked right */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-[#ede8e2]">
-            {/* Large Left */}
             <div onClick={() => router.push(EDITORIAL_GRID[0].href)}
               className="relative group overflow-hidden h-[420px] cursor-pointer border-r border-[#ede8e2]">
               <img src={EDITORIAL_GRID[0].img} alt={EDITORIAL_GRID[0].title}
@@ -361,25 +385,19 @@ function WomenStoreContent() {
                 <p className="text-[9px] uppercase tracking-[0.3em] text-[#c9a96e] font-semibold mb-1">{EDITORIAL_GRID[0].label}</p>
                 <h3 className="font-serif text-2xl text-white italic mb-1">{EDITORIAL_GRID[0].title}</h3>
                 <p className="text-[10px] text-white/60 mb-3">{EDITORIAL_GRID[0].sub}</p>
-                <span className="text-[9px] uppercase tracking-widest font-bold text-white border-b border-white/40 pb-0.5 group-hover:border-white transition-all flex items-center gap-1.5 w-max">
-                  Shop Now <ChevronRight size={11} />
-                </span>
+                <span className="text-[9px] uppercase tracking-widest font-bold text-white border-b border-white/40 pb-0.5 flex items-center gap-1.5 w-max">Shop Now <ChevronRight size={11} /></span>
               </div>
             </div>
-            {/* Stacked Right */}
             <div className="flex flex-col">
               {EDITORIAL_GRID.slice(1).map((b, i) => (
                 <div key={i} onClick={() => router.push(b.href)}
                   className={`relative group overflow-hidden h-[210px] cursor-pointer ${i === 0 ? "border-b border-[#ede8e2]" : ""}`}>
-                  <img src={b.img} alt={b.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={b.img} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <p className="text-[9px] uppercase tracking-[0.3em] text-[#c9a96e] font-semibold mb-0.5">{b.label}</p>
                     <h3 className="font-serif text-lg text-white italic mb-1">{b.title}</h3>
-                    <span className="text-[9px] uppercase tracking-widest font-bold text-white border-b border-white/40 pb-0.5 group-hover:border-white transition-all flex items-center gap-1.5 w-max">
-                      Shop Now <ChevronRight size={11} />
-                    </span>
+                    <span className="text-[9px] uppercase tracking-widest font-bold text-white border-b border-white/40 pb-0.5 flex items-center gap-1.5 w-max">Shop Now <ChevronRight size={11} /></span>
                   </div>
                 </div>
               ))}
@@ -397,15 +415,13 @@ function WomenStoreContent() {
               <h2 className="font-serif text-2xl text-[#1a0e0a] italic font-light">Featured Products</h2>
             </div>
             <button onClick={() => router.push("/women-store?view=all")}
-              className="text-[10px] uppercase tracking-widest font-bold border-b border-[#1a0e0a] pb-0.5 hover:text-[#c9845a] hover:border-[#c9845a] transition-colors">
-              View All →
-            </button>
+              className="text-[10px] uppercase tracking-widest font-bold border-b border-[#1a0e0a] pb-0.5 hover:text-[#c9845a] hover:border-[#c9845a] transition-colors">View All →</button>
           </div>
           <WomenItem />
         </div>
       </section>
 
-      {/* STYLE BANNERS — dark section */}
+      {/* STYLE BANNERS */}
       <section className="py-10 bg-[#1a0e0a]">
         <div className={WRAPPER}>
           <div className="mb-6">
@@ -415,16 +431,13 @@ function WomenStoreContent() {
           <div className="grid grid-cols-1 md:grid-cols-3 border border-white/10">
             {STYLE_BANNERS.map((b, i) => (
               <div key={i} className="relative group overflow-hidden h-[280px] border-r border-white/10 last:border-r-0 cursor-pointer">
-                <img src={b.img} alt={b.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-75" />
+                <img src={b.img} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-75" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <p className="text-[9px] uppercase tracking-[0.3em] text-[#c9a96e] font-semibold mb-1">{b.label}</p>
                   <h3 className="font-serif text-lg text-white italic mb-1">{b.title}</h3>
                   <p className="text-[10px] text-white/50 mb-3">{b.sub}</p>
-                  <span className="text-[9px] uppercase tracking-widest font-bold text-white border-b border-white/40 pb-0.5 group-hover:border-white transition-all flex items-center gap-1.5 w-max">
-                    Shop Now <ChevronRight size={11} />
-                  </span>
+                  <span className="text-[9px] uppercase tracking-widest font-bold text-white border-b border-white/40 pb-0.5 flex items-center gap-1.5 w-max">Shop Now <ChevronRight size={11} /></span>
                 </div>
               </div>
             ))}
@@ -432,16 +445,13 @@ function WomenStoreContent() {
         </div>
       </section>
 
-      {/* PROMO BANNER — full width single */}
+      {/* PROMO BANNER */}
       <section className="py-0">
         <div className={WRAPPER}>
           <div className="relative overflow-hidden h-[140px] my-10 bg-[#f5ede4] flex items-center">
             <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80"
-                alt="promo"
-                className="w-full h-full object-cover object-top opacity-30"
-              />
+              <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80" alt="promo"
+                className="w-full h-full object-cover object-top opacity-30" />
             </div>
             <div className="relative z-10 px-10">
               <p className="text-[10px] uppercase tracking-[0.4em] text-[#c9845a] font-semibold mb-1 flex items-center gap-2">
@@ -459,19 +469,17 @@ function WomenStoreContent() {
         </div>
       </section>
 
-      {/* USP STRIP */}
+      {/* USP */}
       <section className="py-8 bg-[#fdfaf4] border-t border-[#ede8e2]">
         <div className={WRAPPER}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Zap,        title: "Fast Delivery",   sub: "Ships within 2–4 business days" },
-              { icon: Award,      title: "Premium Quality", sub: "Carefully sourced, crafted to last" },
-              { icon: TrendingUp, title: "Easy Returns",    sub: "30-day hassle-free returns" },
+              { icon: Zap, title: "Fast Delivery", sub: "Ships within 2–4 business days" },
+              { icon: Award, title: "Premium Quality", sub: "Carefully sourced, crafted to last" },
+              { icon: TrendingUp, title: "Easy Returns", sub: "30-day hassle-free returns" },
             ].map(({ icon: Icon, title, sub }) => (
               <div key={title} className="flex items-start gap-4">
-                <div className="p-2.5 border border-[#ede8e2]">
-                  <Icon size={15} className="text-[#c9845a]" />
-                </div>
+                <div className="p-2.5 border border-[#ede8e2]"><Icon size={15} className="text-[#c9845a]" /></div>
                 <div>
                   <p className="text-[12px] font-bold uppercase tracking-wide text-[#1a0e0a] mb-0.5">{title}</p>
                   <p className="text-[11px] text-[#9a8a7a]">{sub}</p>
@@ -483,10 +491,7 @@ function WomenStoreContent() {
       </section>
 
       <style jsx>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         .animate-marquee { animation: marquee 20s linear infinite; }
       `}</style>
     </div>
@@ -495,11 +500,7 @@ function WomenStoreContent() {
 
 export default function WomenStore() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#fdfaf4] flex items-center justify-center text-[#9a8a7a] text-sm tracking-widest uppercase">
-        Loading...
-      </div>
-    }>
+    <Suspense fallback={<div className="min-h-screen bg-[#fdfaf4] flex items-center justify-center text-[#9a8a7a] text-sm tracking-widest uppercase">Loading...</div>}>
       <WomenStoreContent />
     </Suspense>
   );

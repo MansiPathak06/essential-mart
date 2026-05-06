@@ -55,12 +55,12 @@ export const CartProvider = ({ children }) => {
     };
 
     const clearCart = async () => {
-        try {
-            await cartApi.clear();
-            setItems([]);
-        } catch (err) {
-            console.error(err.message);
-        }
+       setItems([]);
+    try {
+        await cartApi.clear();
+    } catch (err) {
+        console.error(err.message);
+    }
     };
 
     const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);

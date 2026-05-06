@@ -37,7 +37,7 @@ export const cartApi = {
             headers: authHeaders(),
         }).then(handleResponse),
     clear: () =>
-        fetch(`${BASE_URL}/cart/clear`, {
+        fetch(`${BASE_URL}/clear`, {
             method: 'DELETE',
             headers: authHeaders(),
         }).then(handleResponse),
@@ -52,7 +52,7 @@ export const userApi = {
             headers: authHeaders(),
             body: JSON.stringify(data),
         }).then(handleResponse),
-    getOrders: () => fetch(`${BASE_URL}/user/orders`, { headers: authHeaders() }).then(handleResponse),
+    getOrders: () => fetch(`${BASE_URL}/orders/my`, { headers: authHeaders() }).then(handleResponse),
 };
 
 // ─── Wishlist ────────────────────────────────────────

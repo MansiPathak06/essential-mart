@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ImagePlus, PackagePlus, Save, Star } from "lucide-react";
 import { adminFetch } from "../adminApi";
+import MediaUpload from "@/components/MediaUpload";
 
 const CATEGORIES = ["Men", "Women", "Kids"];
 
@@ -74,6 +75,7 @@ export default function AddProductPage() {
 
       setMessage(`Product #${product.id} saved to the database.`);
       setForm(emptyForm);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(err.message || "Failed to save product");
     } finally {
@@ -103,9 +105,7 @@ export default function AddProductPage() {
               >
                 <option value="">Select category</option>
                 {CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
+                  <option key={category} value={category}>{category}</option>
                 ))}
               </select>
             </Field>
@@ -121,9 +121,7 @@ export default function AddProductPage() {
               >
                 <option value="">Select sub-category</option>
                 {(SUB_CATEGORIES[form.category] || []).map((subcategory) => (
-                  <option key={subcategory} value={subcategory}>
-                    {subcategory}
-                  </option>
+                  <option key={subcategory} value={subcategory}>{subcategory}</option>
                 ))}
               </select>
             </Field>
@@ -181,19 +179,39 @@ export default function AddProductPage() {
           </div>
         </Panel>
 
-        <Panel title="Product Images" icon={ImagePlus}>
-          <div className="grid gap-3 md:grid-cols-2">
+        {/* ── IMAGES / MEDIA ── */}
+        <Panel title="Product Images & Media" icon={ImagePlus}>
+          <p className="text-xs text-stone-500 mb-4">
+            URL paste karo ya computer se image/video upload karo। First image main image hogi।
+          </p>
+          <div className="grid gap-5 md:grid-cols-2">
             {form.images.map((image, index) => (
-              <Field key={index} label={`Image URL ${index + 1}`}>
-                <input
-                  value={image}
-                  onChange={(event) => updateImage(index, event.target.value)}
-                  placeholder="https://..."
-                  className={inputClass}
-                />
-              </Field>
+              <MediaUpload
+                key={index}
+                label="Media"
+                index={index}
+                value={image}
+                onChange={(val) => updateImage(index, val)}
+                accept="image/*,video/*"
+              />
             ))}
           </div>
+
+          {/* Preview strip */}
+          {form.images.some(Boolean) && (
+            <div className="mt-4 pt-4 border-t border-stone-100">
+              <p className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">Preview</p>
+              <div className="flex gap-2">
+                {form.images.filter(Boolean).map((img, i) => (
+                  img.includes('video') || img.includes('.mp4') ? (
+                    <video key={i} src={img} className="w-16 h-16 rounded object-cover border border-stone-200" />
+                  ) : (
+                    <img key={i} src={img} alt={`preview-${i}`} className="w-16 h-16 rounded object-cover border border-stone-200" onError={e => e.target.style.display='none'} />
+                  )
+                ))}
+              </div>
+            </div>
+          )}
         </Panel>
       </div>
 
@@ -207,7 +225,7 @@ export default function AddProductPage() {
                 className={inputClass}
               />
             </Field>
-            <Field label="Rating">
+            <Field label="Rating (1-5)">
               <input
                 type="number"
                 min="1"
@@ -229,13 +247,9 @@ export default function AddProductPage() {
         </Panel>
 
         {(message || error) && (
-          <div
-            className={`rounded-lg border px-3 py-2 text-sm font-semibold ${
-              error
-                ? "border-red-200 bg-red-50 text-red-700"
-                : "border-emerald-200 bg-emerald-50 text-emerald-700"
-            }`}
-          >
+          <div className={`rounded-lg border px-3 py-2 text-sm font-semibold ${
+            error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"
+          }`}>
             {error || message}
           </div>
         )}
@@ -253,8 +267,7 @@ export default function AddProductPage() {
   );
 }
 
-const inputClass =
-  "w-full rounded-lg border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-950 outline-none focus:border-stone-950 disabled:bg-stone-100";
+const inputClass = "w-full rounded-lg border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-950 outline-none focus:border-stone-950 disabled:bg-stone-100";
 
 function Panel({ title, icon: Icon, children }) {
   return (
@@ -272,8 +285,7 @@ function Field({ label, required, children }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-bold uppercase tracking-widest text-stone-500">
-        {label}
-        {required ? " *" : ""}
+        {label}{required ? " *" : ""}
       </span>
       {children}
     </label>

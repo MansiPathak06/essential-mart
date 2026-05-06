@@ -28,6 +28,7 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/cart', cartRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/categories', require('./routes/categoryRoutes'));
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ error: `${req.method} ${req.url} not found` }));

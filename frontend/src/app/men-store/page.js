@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Heart, Filter, X, ChevronRight, TrendingUp, Zap, Award } from "lucide-react";
+import { Heart, Filter, X, ChevronRight, TrendingUp, Zap, Award, ShoppingBag, Check } from "lucide-react";
 import MenItem from "@/components/MenItem";
+import { useCart } from "@/context/CartContext";
+import LoginModal from "@/components/LoginModal";
 
 const FILTER_DATA = {
   categories: [
@@ -36,12 +38,93 @@ const CAROUSEL_IMAGES = [
 ];
 
 const STYLE_BANNERS = [
-  { label: "New Season",  title: "Fresh Arrivals", sub: "Spring / Summer 2025",       img: "https://i.pinimg.com/736x/ee/76/24/ee7624712cbbc310a82ec41528b0484a.jpg" },
-  { label: "Best Seller", title: "Classic Whites", sub: "Timeless Wardrobe Staples",  img: "https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&q=80" },
-  { label: "Ethnic Edit", title: "Festive Ready",  sub: "Kurtas & Sherwani Sets",     img: "https://i.pinimg.com/736x/94/cb/66/94cb66f6e4331dee2e05578cc648b91a.jpg" },
+  { label: "New Season",  title: "Fresh Arrivals", sub: "Spring / Summer 2025", img: "https://i.pinimg.com/736x/ee/76/24/ee7624712cbbc310a82ec41528b0484a.jpg" },
+  { label: "Best Seller", title: "Classic Whites", sub: "Timeless Wardrobe Staples", img: "https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&q=80" },
+  { label: "Ethnic Edit", title: "Festive Ready", sub: "Kurtas & Sherwani Sets", img: "https://i.pinimg.com/736x/94/cb/66/94cb66f6e4331dee2e05578cc648b91a.jpg" },
 ];
 
 const WRAPPER = "max-w-[1440px] mx-auto px-6 md:px-14";
+
+// ── Product Card with Quick Add ───────────────────────────────────────────
+function ProductCard({ item, onAddToCart, cartLoading, cartAdded }) {
+  const router = useRouter();
+  const [wishlist, setWishlist] = useState(false);
+  const isAdded = cartAdded === item.id;
+  const isLoading = cartLoading === item.id;
+
+  return (
+    <div className="group cursor-pointer bg-white border border-[#f0ece4] relative overflow-hidden">
+      {/* Image */}
+      <div
+        className="aspect-[3/4] overflow-hidden relative"
+        onClick={() => router.push(`/product/${item.id}`)}
+      >
+        <img
+          src={item.images?.[0] || item.image_url || '/placeholder.jpg'}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          alt={item.name}
+        />
+
+        {/* Wishlist */}
+        <button
+          onClick={e => { e.stopPropagation(); setWishlist(w => !w); }}
+          className="absolute top-3 right-3 w-7 h-7 bg-white flex items-center justify-center shadow-sm z-10"
+        >
+          <Heart size={13} className={wishlist ? "fill-red-500 text-red-500" : "text-gray-400"} />
+        </button>
+
+        {/* Sale Badge */}
+        {item.original_price > item.price && (
+          <span className="absolute top-3 left-3 bg-[#b85c38] text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 z-10">
+            Sale
+          </span>
+        )}
+
+        {/* Quick Add — hover pe show */}
+        <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              onAddToCart(item.id);
+            }}
+            disabled={isLoading || !item.in_stock}
+            className={`w-full py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+              isAdded
+                ? 'bg-green-600 text-white'
+                : !item.in_stock
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-[#1a1410] text-white hover:bg-[#b85c38]'
+            }`}
+          >
+            {isAdded ? (
+              <><Check size={13} /> Added!</>
+            ) : isLoading ? (
+              <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Adding...</>
+            ) : !item.in_stock ? (
+              'Out of Stock'
+            ) : (
+              <><ShoppingBag size={13} /> Quick Add</>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div
+        className="p-3 border-t border-[#f0ece4]"
+        onClick={() => router.push(`/product/${item.id}`)}
+      >
+        <h3 className="text-[12px] font-semibold text-[#1a1410] truncate mb-1.5">{item.name}</h3>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-[14px] text-[#1a1410]">₹{item.price.toLocaleString()}</span>
+          {item.original_price > item.price && (
+            <span className="text-[11px] text-[#9a8a7a] line-through">₹{item.original_price.toLocaleString()}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function MenStoreContent() {
   const router = useRouter();
@@ -49,15 +132,24 @@ function MenStoreContent() {
   const subCategory = searchParams.get("subcategory");
   const isViewAll = searchParams.get("view") === "all";
 
+  const { addToCart } = useCart();
+
   const [rawProducts, setRawProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [wishlist, setWishlist] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
   const [appliedPriceRange, setAppliedPriceRange] = useState({ min: 0, max: 20000 });
   const [sortBy, setSortBy] = useState("popularity");
+
+  // Cart state
+  const [cartLoading, setCartLoading] = useState(null); // product id
+  const [cartAdded, setCartAdded] = useState(null); // product id
+
+  // Login Modal
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [pendingProductId, setPendingProductId] = useState(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -101,8 +193,6 @@ function MenStoreContent() {
     return () => clearInterval(timer);
   }, []);
 
-  const toggleWishlist = (id) => setWishlist(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
-
   const clearAllFilters = () => {
     setSelectedCategories([]);
     setPriceRange({ min: 0, max: 20000 });
@@ -110,10 +200,47 @@ function MenStoreContent() {
     router.push("/men-store");
   };
 
-  // ─── PRODUCT LISTING VIEW ────────────────────────────────────────────────
+  // ── Add to Cart Handler ───────────────────────────────
+  const doAddToCart = async (productId) => {
+    setCartLoading(productId);
+    const result = await addToCart(productId);
+    setCartLoading(null);
+    if (result.success) {
+      setCartAdded(productId);
+      setTimeout(() => setCartAdded(null), 2000);
+    } else {
+      alert(result.error || 'Cart mein add nahi ho saka!');
+    }
+  };
+
+  const handleAddToCart = (productId) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setPendingProductId(productId);
+      setShowLoginModal(true);
+      return;
+    }
+    doAddToCart(productId);
+  };
+
+  const handleLoginSuccess = () => {
+    if (pendingProductId) {
+      doAddToCart(pendingProductId);
+      setPendingProductId(null);
+    }
+  };
+
+  // ─── PRODUCT LISTING VIEW ────────────────────────────
   if (subCategory || isViewAll) {
     return (
       <div className="bg-[#fafaf9] min-h-screen">
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
+          onSuccess={handleLoginSuccess}
+          message="Cart mein add karne ke liye login karo"
+        />
+
         {/* Top Bar */}
         <div className="bg-[#0e0c0b] text-white">
           <div className={`${WRAPPER} py-4 flex items-center justify-between`}>
@@ -124,20 +251,15 @@ function MenStoreContent() {
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value)}
-                className="bg-white/10 text-white text-[10px] uppercase tracking-widest px-3 py-2 border border-white/10 outline-none"
-              >
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+                className="bg-white/10 text-white text-[10px] uppercase tracking-widest px-3 py-2 border border-white/10 outline-none">
                 <option value="popularity">Popularity</option>
                 <option value="new">Newest</option>
                 <option value="low">Price: Low</option>
                 <option value="high">Price: High</option>
               </select>
-              <button
-                onClick={() => setIsFilterOpen(true)}
-                className="lg:hidden flex items-center gap-2 bg-white/10 px-3 py-2 text-[10px] uppercase tracking-widest border border-white/10"
-              >
+              <button onClick={() => setIsFilterOpen(true)}
+                className="lg:hidden flex items-center gap-2 bg-white/10 px-3 py-2 text-[10px] uppercase tracking-widest border border-white/10">
                 <Filter size={13} /> Filter
               </button>
             </div>
@@ -156,19 +278,15 @@ function MenStoreContent() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#b85c38]">Category</p>
                 {FILTER_DATA.categories.map(c => (
                   <label key={c.slug} className="flex items-center gap-2.5 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(c.slug)}
+                    <input type="checkbox" checked={selectedCategories.includes(c.slug)}
                       onChange={() => setSelectedCategories(p =>
                         p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug]
-                      )}
-                      className="w-3.5 h-3.5 accent-[#b85c38]"
-                    />
+                      )} className="w-3.5 h-3.5 accent-[#b85c38]" />
                     <span className="text-[12px] text-[#5a4a3a] group-hover:text-[#1a1410] transition-colors">{c.name}</span>
                   </label>
                 ))}
               </div>
-              <div className="space-y-3 pt-4 border-t border-[#e5e0d8]">
+              <div className="space-y-3 pt-4 border-t border-[#e5ddd0]">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#b85c38]">Price Range</p>
                 <div className="flex gap-2">
                   <input type="number" value={priceRange.min}
@@ -186,7 +304,7 @@ function MenStoreContent() {
             </div>
           </aside>
 
-          {/* Mobile Drawer */}
+          {/* Mobile Filter Drawer */}
           {isFilterOpen && (
             <div className="fixed inset-0 z-[200] bg-white p-6 overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
@@ -220,39 +338,21 @@ function MenStoreContent() {
                   <div key={i} className="aspect-[3/4] bg-[#f0ece4] animate-pulse" />
                 ))}
               </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-20 text-[#9a8a7a]">
+                <div className="text-5xl mb-4">🔍</div>
+                <p className="text-sm uppercase tracking-widest">Koi product nahi mila</p>
+              </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredProducts.map(item => (
-                  <div key={item.id}
-                    className="group cursor-pointer bg-white border border-[#f0ece4]"
-                    onClick={() => router.push(`/product/${item.id}`)}>
-                    <div className="aspect-[3/4] overflow-hidden relative">
-                      <img
-                        src={item.images[0] || "/placeholder.jpg"}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        alt={item.name}
-                      />
-                      <button
-                        onClick={e => { e.stopPropagation(); toggleWishlist(item.id); }}
-                        className="absolute top-3 right-3 w-7 h-7 bg-white flex items-center justify-center shadow-sm">
-                        <Heart size={13} className={wishlist.includes(item.id) ? "fill-red-500 text-red-500" : "text-gray-400"} />
-                      </button>
-                      {item.original_price > item.price && (
-                        <span className="absolute top-3 left-3 bg-[#b85c38] text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
-                          Sale
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-3 border-t border-[#f0ece4]">
-                      <h3 className="text-[12px] font-semibold text-[#1a1410] truncate mb-1.5">{item.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[14px] text-[#1a1410]">₹{item.price.toLocaleString()}</span>
-                        {item.original_price > item.price && (
-                          <span className="text-[11px] text-[#9a8a7a] line-through">₹{item.original_price.toLocaleString()}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <ProductCard
+                    key={item.id}
+                    item={item}
+                    onAddToCart={handleAddToCart}
+                    cartLoading={cartLoading}
+                    cartAdded={cartAdded}
+                  />
                 ))}
               </div>
             )}
@@ -262,29 +362,32 @@ function MenStoreContent() {
     );
   }
 
-  // ─── HOMEPAGE VIEW ───────────────────────────────────────────────────────
+  // ─── HOMEPAGE VIEW ────────────────────────────────────
   return (
     <div className="bg-white min-h-screen">
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
+        onSuccess={handleLoginSuccess}
+        message="Cart mein add karne ke liye login karo"
+      />
 
-      {/* HERO — compact */}
+      {/* HERO */}
       <section className="relative w-full h-[200px] md:h-[280px] overflow-hidden">
         {CAROUSEL_IMAGES.map((img, idx) => (
           <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === currentSlide ? "opacity-100" : "opacity-0"}`}>
-            <img src={img} className="w-full h-full object-fit" alt="Banner" />
+            <img src={img} className="w-full h-full object-cover" alt="Banner" />
             <div className="absolute inset-0 bg-black/35" />
           </div>
         ))}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
           <p className="text-[10px] uppercase tracking-[0.4em] text-white/60 mb-2">New Season Arrivals</p>
           <h1 className="font-serif text-2xl md:text-3xl font-light italic mb-4">Men's Collection</h1>
-          <button
-            onClick={() => router.push("/men-store?view=all")}
-            className="bg-white text-[#1a1410] px-7 py-2 text-[10px] uppercase tracking-widest font-bold hover:bg-[#b85c38] hover:text-white transition-all duration-300 flex items-center gap-2"
-          >
+          <button onClick={() => router.push("/men-store?view=all")}
+            className="bg-white text-[#1a1410] px-7 py-2 text-[10px] uppercase tracking-widest font-bold hover:bg-[#b85c38] hover:text-white transition-all duration-300 flex items-center gap-2">
             Explore All <ChevronRight size={12} />
           </button>
         </div>
-        {/* Dots */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
           {CAROUSEL_IMAGES.map((_, i) => (
             <button key={i} onClick={() => setCurrentSlide(i)}
@@ -316,8 +419,7 @@ function MenStoreContent() {
           </div>
           <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
             {CATEGORIES.map(cat => (
-              <button key={cat.slug}
-                onClick={() => router.push(`/men-store?subcategory=${cat.slug}`)}
+              <button key={cat.slug} onClick={() => router.push(`/men-store?subcategory=${cat.slug}`)}
                 className="group flex flex-col items-center gap-2">
                 <div className="w-full aspect-square overflow-hidden rounded-full border-2 border-[#e5ddd0] group-hover:border-[#b85c38] transition-all duration-300">
                   <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -357,7 +459,9 @@ function MenStoreContent() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 border border-white/10">
             {STYLE_BANNERS.map((b, i) => (
-              <div key={i} className="relative group overflow-hidden h-[280px] border-r border-white/10 last:border-r-0 cursor-pointer">
+              <div key={i}
+                onClick={() => router.push(`/men-store?subcategory=${b.title.toLowerCase().replace(' ', '-')}`)}
+                className="relative group overflow-hidden h-[280px] border-r border-white/10 last:border-r-0 cursor-pointer">
                 <img src={b.img} alt={b.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-70" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

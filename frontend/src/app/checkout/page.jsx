@@ -99,7 +99,7 @@ export default function CheckoutPage() {
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Placed! 🎉</h1>
                 <p className="text-gray-500 text-sm mb-1">Order #{orderId}</p>
-                <p className="text-gray-400 text-xs mb-4">Delivery 3–7 business days mein hogi।</p>
+                <p className="text-gray-400 text-xs mb-4">Delivery in 3–7 business days ।</p>
                 <div className="bg-orange-50 rounded-xl p-3 mb-8">
                     <p className="text-orange-700 text-sm font-bold">Total Paid: ₹{payableTotal.toLocaleString()}</p>
                     <p className="text-orange-500 text-xs mt-0.5">
@@ -398,7 +398,7 @@ export default function CheckoutPage() {
                             </div>
                             {savings > 0 && (
                                 <div className="mt-3 bg-green-50 rounded-lg p-2 text-center">
-                                    <p className="text-green-700 text-xs font-bold">🎉 ₹{savings.toLocaleString()} ki saving!</p>
+                                    <p className="text-green-700 text-xs font-bold">🎉 ₹{savings.toLocaleString()} saving!</p>
                                 </div>
                             )}
                         </div>

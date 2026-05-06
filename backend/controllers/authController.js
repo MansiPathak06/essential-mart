@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
 const signup = async (req, res) => {
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     if (!email || !password)
         return res.status(400).json({ error: 'Email and password required' });
@@ -18,14 +18,24 @@ const signup = async (req, res) => {
         const role = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'user';
 
         const result = await pool.query(
-            `INSERT INTO users (email, password, role, created_at)
-             VALUES ($1, $2, $3, NOW()) RETURNING id, email, role`,
-            [email, hashedPassword, role]
+            `INSERT INTO users (name, email, password, role, created_at)
+             VALUES ($1, $2, $3, $4, NOW()) RETURNING id, email, role`,
+            [name || '', email, hashedPassword, role]
+        );
+
+        const user = result.rows[0];
+
+        // ✅ Token generate karo — same as login
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET || 'essential_mart_secret',
+            { expiresIn: '7d' }
         );
 
         res.status(201).json({
             message: 'Account created successfully',
-            user: result.rows[0],
+            token,
+            user: { id: user.id, email: user.email, role: user.role },
         });
     } catch (err) {
         console.error('Signup Error:', err.message);
@@ -47,16 +57,13 @@ const login = async (req, res) => {
 
         const user = result.rows[0];
 
-        // Detect whether stored password is a bcrypt hash or legacy plaintext
         const isBcryptHash = /^\$2[ab]\$/.test(user.password);
         let isMatch = false;
 
         if (isBcryptHash) {
             isMatch = await bcrypt.compare(password, user.password);
         } else {
-            // Legacy plaintext comparison
             isMatch = (password === user.password);
-            // Auto-upgrade to bcrypt so next login uses hashed password
             if (isMatch) {
                 const hashed = await bcrypt.hash(password, 10);
                 await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashed, user.id]);

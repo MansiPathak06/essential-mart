@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { LayoutGrid } from "lucide-react";
 import {
   BarChart3,
   Boxes,
@@ -16,6 +17,7 @@ import {
 import { getStoredAuth } from "./adminApi";
 
 const navItems = [
+  { href: "/admin/categories", label: "Categories", icon: LayoutGrid },
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
   { href: "/admin/add-product", label: "Add Product", icon: PackagePlus },
   { href: "/admin/manage", label: "Products", icon: Boxes },
