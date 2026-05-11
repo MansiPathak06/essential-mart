@@ -97,7 +97,7 @@ function CategoryPageContent() {
         isOpen={showLoginModal}
         onClose={() => { setShowLoginModal(false); setPendingId(null); }}
         onSuccess={() => { if (pendingId) { doAddToCart(pendingId); setPendingId(null); } }}
-        message="Cart mein add karne ke liye login karo"
+        message="Login first to add the product in cart!"
       />
 
       {/* TOP BAR */}

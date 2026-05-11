@@ -5,6 +5,7 @@ import { X, Filter, Star, Heart, ChevronRight, Zap, Shield, Truck, RotateCcw, Sh
 import KidsItem from "@/components/KidsItem";
 import { useCart } from "@/context/CartContext";
 import LoginModal from "@/components/LoginModal";
+import { useCategories } from '@/hooks/useCategories';
 
 const FILTER_DATA = {
   categories: [
@@ -53,16 +54,21 @@ function KidsStoreContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const subCategory  = searchParams.get("subcategory");
-  const isViewAll    = searchParams.get("view") === "all";
+const searchQuery  = searchParams.get("search") || "";           // ✅ add karo
+const isViewAll    = searchParams.get("view") === "all" || !!searchQuery; 
 
   const { addToCart } = useCart();
+  const categories = useCategories('Kids');                                        // ✅
+const filterCategories = categories.map(c => ({ name: c.name, slug: c.slug })); // ✅
 
   const [rawProducts,        setRawProducts]        = useState([]);
   const [loading,            setLoading]            = useState(false);
   const [currentSlide,       setCurrentSlide]       = useState(0);
   const [isFilterOpen,       setIsFilterOpen]       = useState(false);
   const [wishlist,           setWishlist]           = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(
+  () => subCategory ? [subCategory] : []
+);
   const [priceRange,         setPriceRange]         = useState({ min: 0, max: 20000 });
   const [appliedPriceRange,  setAppliedPriceRange]  = useState({ min: 0, max: 20000 });
   const [sortBy,             setSortBy]             = useState("popularity");
@@ -76,8 +82,8 @@ function KidsStoreContent() {
       if (!subCategory && !isViewAll) { setRawProducts([]); return; }
       try {
         setLoading(true);
-        let url = `http://localhost:5000/api/products?category=kids`;
-        if (subCategory) { url += `&sub_category=${subCategory}`; setSelectedCategories([subCategory]); }
+       let url = `http://localhost:5000/api/products?category=kids`;
+      if (subCategory) url += `&sub_category=${subCategory}`;
         else setSelectedCategories([]);
         const res  = await fetch(url);
         const data = await res.json();
@@ -93,11 +99,21 @@ function KidsStoreContent() {
     fetchProducts();
   }, [subCategory, isViewAll]);
 
+  useEffect(() => {
+  setSelectedCategories(subCategory ? [subCategory] : []);
+}, [subCategory]);
+
   const filteredProducts = useMemo(() => rawProducts
     .filter(p => {
-      const inPrice = p.price >= appliedPriceRange.min && p.price <= appliedPriceRange.max;
-      const inCat   = selectedCategories.length === 0 || selectedCategories.includes(p.sub_category);
-      return inPrice && inCat;
+    
+     const inPrice  = p.price >= appliedPriceRange.min && p.price <= appliedPriceRange.max; // ✅ pehle declare
+    const inCat    = selectedCategories.length === 0 || selectedCategories.includes(p.sub_category);
+    const inSearch = searchQuery.trim() === "" ||
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sub_category?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return inPrice && inCat && inSearch; // ✅ teeno use karo
+
     })
     .sort((a, b) => {
       if (sortBy === "low")  return a.price - b.price;
@@ -137,7 +153,7 @@ function KidsStoreContent() {
       isOpen={showLoginModal}
       onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
       onSuccess={() => { if (pendingProductId) { doAddToCart(pendingProductId); setPendingProductId(null); } }}
-      message="Cart mein add karne ke liye login karo"
+      message="Login first to add the product in cart!"
     />
   );
 
@@ -162,9 +178,13 @@ function KidsStoreContent() {
           <div className={`${WRAPPER} py-5 flex flex-wrap items-center justify-between gap-4`}>
             <div>
               <p style={{ color:"rgba(255,255,255,0.45)", fontSize:"10px", letterSpacing:"0.35em", textTransform:"uppercase", marginBottom:"2px" }}>Kids Collection</p>
-              <h1 style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", fontSize:"clamp(1.3rem,3vw,2rem)", color:"#fff", fontWeight:400 }}>
-                {isViewAll ? "All Products" : subCategory?.replace("-", " ")}
-              </h1>
+             <h1 style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", fontSize:"clamp(1.3rem,3vw,2rem)", color:"#fff", fontWeight:400 }}>
+  {searchQuery
+    ? `Results for "${searchQuery}"`
+    : isViewAll
+    ? "All Products"
+    : subCategory?.replace("-", " ")}
+</h1>
             </div>
             <div className="flex items-center gap-3">
               <select value={sortBy} onChange={e => setSortBy(e.target.value)}
@@ -187,12 +207,18 @@ function KidsStoreContent() {
           <div className={`${WRAPPER} py-3 flex gap-2 overflow-x-auto`} style={{ scrollbarWidth:"none" }}>
             <button onClick={() => router.push("/kids-store?view=all")}
               style={{ flexShrink:0, padding:"6px 16px", borderRadius:"999px", border: isViewAll && !subCategory ? "1.5px solid #1a0a2e" : "1.5px solid #e0dbd0", background: isViewAll && !subCategory ? "#1a0a2e" : "transparent", color: isViewAll && !subCategory ? "#fff" : "#666", fontSize:"11px", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", cursor:"pointer", whiteSpace:"nowrap" }}>All</button>
-            {CATEGORIES.map(cat => (
-              <button key={cat.slug} onClick={() => router.push(`/kids-store?subcategory=${cat.slug}`)}
-                style={{ flexShrink:0, padding:"6px 16px", borderRadius:"999px", border: subCategory === cat.slug ? `1.5px solid ${cat.color}` : "1.5px solid #e0dbd0", background: subCategory === cat.slug ? cat.color : "transparent", color: subCategory === cat.slug ? "#fff" : "#666", fontSize:"11px", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.25s ease" }}>
-                {cat.icon} {cat.name}
-              </button>
-            ))}
+           {/* ✅ Ab */}
+{categories.map(cat => (
+  <button key={cat.slug} onClick={() => router.push(`/kids-store?subcategory=${cat.slug}`)}
+    style={{ flexShrink:0, padding:"6px 16px", borderRadius:"999px",
+      border: subCategory === cat.slug ? "1.5px solid #A855F7" : "1.5px solid #e0dbd0",
+      background: subCategory === cat.slug ? "#A855F7" : "transparent",
+      color: subCategory === cat.slug ? "#fff" : "#666",
+      fontSize:"11px", fontWeight:700, letterSpacing:"0.1em",
+      textTransform:"uppercase", cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.25s ease" }}>
+    {cat.name}
+  </button>
+))}
           </div>
         </div>
 
@@ -207,7 +233,7 @@ function KidsStoreContent() {
               <div style={{ marginBottom:"24px" }}>
                 <p style={{ fontSize:"10px", fontWeight:800, letterSpacing:"0.25em", textTransform:"uppercase", color:"#A855F7", marginBottom:"12px" }}>Category</p>
                 <div style={{ display:"flex", flexDirection:"column", gap:"8px" }}>
-                  {FILTER_DATA.categories.map(c => (
+                  {filterCategories.map(c => (
                     <label key={c.slug} style={{ display:"flex", alignItems:"center", gap:"10px", cursor:"pointer" }}>
                       <input type="checkbox" checked={selectedCategories.includes(c.slug)}
                         onChange={() => setSelectedCategories(p => p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug])}
@@ -241,7 +267,7 @@ function KidsStoreContent() {
                 <button onClick={() => setIsFilterOpen(false)} style={{ background:"none", border:"none", cursor:"pointer" }}><X size={24}/></button>
               </div>
               <div style={{ display:"flex", flexDirection:"column", gap:"10px", marginBottom:"24px" }}>
-                {FILTER_DATA.categories.map(c => (
+                {filterCategories.map(c => (
                   <label key={c.slug} style={{ display:"flex", alignItems:"center", gap:"12px", cursor:"pointer" }}>
                     <input type="checkbox" checked={selectedCategories.includes(c.slug)}
                       onChange={() => setSelectedCategories(p => p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug])}
@@ -270,7 +296,7 @@ function KidsStoreContent() {
             ) : filteredProducts.length === 0 ? (
               <div style={{ textAlign:"center", padding:"80px 0", color:"#aaa" }}>
                 <div style={{ fontSize:"48px", marginBottom:"16px" }}>🔍</div>
-                <p style={{ fontSize:"12px", letterSpacing:"0.2em", textTransform:"uppercase" }}>Koi product nahi mila</p>
+                <p style={{ fontSize:"12px", letterSpacing:"0.2em", textTransform:"uppercase" }}>No products found.</p>
               </div>
             ) : (
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:"20px" }}>
@@ -400,16 +426,23 @@ function KidsStoreContent() {
             <h2 style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", fontSize:"clamp(1.4rem,3vw,2.2rem)", color:"#1a0a2e", fontWeight:400 }}>Shop by Category</h2>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(110px,1fr))", gap:"12px" }}>
-            {CATEGORIES.map(cat => (
-              <button key={cat.slug} className="cat-card"
-                onClick={() => router.push(`/kids-store?subcategory=${cat.slug}`)}
-                style={{ background:"#fff", border:"1px solid #ede8e0", borderRadius:"16px", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", padding:"20px 10px 16px", gap:"10px" }}>
-                <div style={{ width:"52px", height:"52px", borderRadius:"50%", background:`${cat.color}20`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"24px", border:`2px solid ${cat.color}30` }}>
-                  {cat.icon}
-                </div>
-                <span style={{ fontSize:"10px", fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase", color:"#1a0a2e", textAlign:"center" }}>{cat.name}</span>
-              </button>
-            ))}
+            {categories.map(cat => (
+  <button key={cat.slug} className="cat-card"
+    onClick={() => router.push(`/kids-store?subcategory=${cat.slug}`)}
+    style={{ background:"#fff", border:"1px solid #ede8e0", borderRadius:"16px",
+      cursor:"pointer", display:"flex", flexDirection:"column",
+      alignItems:"center", padding:"20px 10px 16px", gap:"10px" }}>
+    <div style={{ width:"52px", height:"52px", borderRadius:"50%", overflow:"hidden",
+      border:"2px solid #ede8e0" }}>
+      <img src={cat.img} alt={cat.name}
+        style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+    </div>
+    <span style={{ fontSize:"10px", fontWeight:800, letterSpacing:"0.12em",
+      textTransform:"uppercase", color:"#1a0a2e", textAlign:"center" }}>
+      {cat.name}
+    </span>
+  </button>
+))}
           </div>
         </div>
       </section>

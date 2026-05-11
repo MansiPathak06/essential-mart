@@ -5,6 +5,7 @@ import { Heart, Filter, X, ChevronRight, TrendingUp, Zap, Award, Sparkles, Shopp
 import WomenItem from "@/components/WomenItem";
 import { useCart } from "@/context/CartContext";
 import LoginModal from "@/components/LoginModal";
+import { useCategories } from '@/hooks/useCategories';
 
 const FILTER_DATA = {
   categories: [
@@ -108,15 +109,22 @@ function WomenStoreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const subCategory = searchParams.get("subcategory");
-  const isViewAll = searchParams.get("view") === "all";
+      const searchQuery = searchParams.get("search") || "";
+  const isViewAll = searchParams.get("view") === "all" || !!searchQuery;
+
 
   const { addToCart } = useCart();
+
+  const categories = useCategories('Women');                              // ✅ add
+const filterCategories = categories.map(c => ({ name: c.name, slug: c.slug })); // ✅ add
 
   const [rawProducts, setRawProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+ const [selectedCategories, setSelectedCategories] = useState(
+  () => subCategory ? [subCategory] : []
+);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
   const [appliedPriceRange, setAppliedPriceRange] = useState({ min: 0, max: 20000 });
   const [sortBy, setSortBy] = useState("popularity");
@@ -126,12 +134,16 @@ function WomenStoreContent() {
   const [pendingProductId, setPendingProductId] = useState(null);
 
   useEffect(() => {
+  setSelectedCategories(subCategory ? [subCategory] : []);
+}, [subCategory]);
+
+  useEffect(() => {
     async function fetchProducts() {
       if (!subCategory && !isViewAll) { setRawProducts([]); return; }
       setLoading(true);
       try {
-        let url = `http://localhost:5000/api/products?category=women`;
-        if (subCategory) url += `&sub_category=${subCategory}`;
+      let url = `http://localhost:5000/api/products?category=women`;
+      if (subCategory) url += `&sub_category=${subCategory}`;
         const res = await fetch(url);
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -148,20 +160,26 @@ function WomenStoreContent() {
     fetchProducts();
   }, [subCategory, isViewAll]);
 
-  const filteredProducts = useMemo(() => {
-    return rawProducts
-      .filter(p => {
-        const matchesPrice = p.price >= appliedPriceRange.min && p.price <= appliedPriceRange.max;
-        const matchesCat = selectedCategories.length === 0 || selectedCategories.includes(p.sub_category);
-        return matchesPrice && matchesCat;
-      })
-      .sort((a, b) => {
-        if (sortBy === "low") return a.price - b.price;
-        if (sortBy === "high") return b.price - a.price;
-        if (sortBy === "new") return b.id - a.id;
-        return 0;
-      });
-  }, [rawProducts, appliedPriceRange, selectedCategories, sortBy]);
+const filteredProducts = useMemo(() => {
+  return rawProducts
+    .filter(p => {
+      const matchesPrice = p.price >= appliedPriceRange.min && p.price <= appliedPriceRange.max;
+      const matchesCat = selectedCategories.length === 0 || selectedCategories.includes(p.sub_category);
+      
+      // ✅ Yeh add karo
+      const matchesSearch = searchQuery.trim() === "" ||
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.sub_category?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesPrice && matchesCat && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "low") return a.price - b.price;
+      if (sortBy === "high") return b.price - a.price;
+      if (sortBy === "new") return b.id - a.id;
+      return 0;
+    });
+}, [rawProducts, appliedPriceRange, selectedCategories, sortBy, searchQuery]); // ✅ searchQuery add karo
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentSlide(p => (p + 1) % CAROUSEL_IMAGES.length), 4000);
@@ -200,15 +218,19 @@ function WomenStoreContent() {
         <LoginModal isOpen={showLoginModal}
           onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
           onSuccess={() => { if (pendingProductId) { doAddToCart(pendingProductId); setPendingProductId(null); } }}
-          message="Cart mein add karne ke liye login karo" />
+          message="Login first to add the product in cart!" />
 
         <div className="bg-[#1a0e0a] text-white">
           <div className={`${WRAPPER} py-4 flex items-center justify-between`}>
             <div>
               <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-0.5">Women's Collection</p>
-              <h1 className="font-serif text-xl md:text-2xl capitalize italic text-white">
-                {isViewAll ? "All Products" : subCategory?.replace("-", " ")}
-              </h1>
+             <h1 className="font-serif text-xl md:text-2xl capitalize italic text-white">
+  {searchQuery
+    ? `Results for "${searchQuery}"`
+    : isViewAll
+    ? "All Products"
+    : subCategory?.replace("-", " ")}
+</h1>
             </div>
             <div className="flex items-center gap-3">
               <select value={sortBy} onChange={e => setSortBy(e.target.value)}
@@ -235,7 +257,7 @@ function WomenStoreContent() {
               </div>
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#c9845a]">Category</p>
-                {FILTER_DATA.categories.map(c => (
+                {filterCategories.map(c => (
                   <label key={c.slug} className="flex items-center gap-2.5 cursor-pointer group">
                     <input type="checkbox" checked={selectedCategories.includes(c.slug)}
                       onChange={() => setSelectedCategories(p => p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug])}
@@ -265,7 +287,7 @@ function WomenStoreContent() {
                 <X onClick={() => setIsFilterOpen(false)} size={22} />
               </div>
               <div className="space-y-4">
-                {FILTER_DATA.categories.map(c => (
+                {filterCategories.map(c => (
                   <label key={c.slug} className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" checked={selectedCategories.includes(c.slug)}
                       onChange={() => setSelectedCategories(p => p.includes(c.slug) ? p.filter(x => x !== c.slug) : [...p, c.slug])}
@@ -288,7 +310,7 @@ function WomenStoreContent() {
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-20 text-[#9a8a7a]">
                 <div className="text-5xl mb-4">🔍</div>
-                <p className="text-sm uppercase tracking-widest">Koi product nahi mila</p>
+                <p className="text-sm uppercase tracking-widest">No products found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -309,7 +331,7 @@ function WomenStoreContent() {
       <LoginModal isOpen={showLoginModal}
         onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
         onSuccess={() => { if (pendingProductId) { doAddToCart(pendingProductId); setPendingProductId(null); } }}
-        message="Cart mein add karne ke liye login karo" />
+        message="Login first to add the product in cart!" />
 
       {/* HERO */}
       <section className="relative w-full h-[200px] md:h-[280px] overflow-hidden">
@@ -355,8 +377,8 @@ function WomenStoreContent() {
             <h2 className="font-serif text-2xl text-[#1a0e0a] italic font-light">Shop by Category</h2>
           </div>
           <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
-            {CATEGORIES.map(cat => (
-              <button key={cat.slug} onClick={() => router.push(`/women-store?subcategory=${cat.slug}`)}
+            {categories.map(cat => (
+  <button key={cat.slug} onClick={() => router.push(`/women-store?subcategory=${cat.slug}`)}
                 className="group flex flex-col items-center gap-2">
                 <div className="w-full aspect-square overflow-hidden rounded-full border-2 border-[#ede8e2] group-hover:border-[#c9845a] transition-all duration-300">
                   <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />

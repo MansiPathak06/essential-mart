@@ -54,14 +54,18 @@ export const CartProvider = ({ children }) => {
         }
     };
 
-    const clearCart = async () => {
-       setItems([]);
-    try {
-        await cartApi.clear();
-    } catch (err) {
-        console.error(err.message);
-    }
-    };
+    // const clearCart = async () => {
+    //    setItems([]);
+    // try {
+    //     await cartApi.clear();
+    // } catch (err) {
+    //     console.error(err.message);
+    // }
+    // };
+
+    const clearCart = () => {
+    setItems([]); // ✅ Sirf local state clear karo, no API call
+};
 
     const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
     const totalPrice = items.reduce((sum, i) => sum + (i.product.discountedPrice * i.quantity), 0);

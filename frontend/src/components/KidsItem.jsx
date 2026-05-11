@@ -59,7 +59,7 @@ export default function KidsItem() {
 
     if (products.length === 0) return (
         <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-            <p>Koi product nahi mila</p>
+            <p>No products found.</p>
         </div>
     );
 
@@ -69,7 +69,7 @@ export default function KidsItem() {
                 isOpen={showLoginModal}
                 onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
                 onSuccess={() => { if (pendingProductId) { doAddToCart(pendingProductId); setPendingProductId(null); } }}
-                message="Cart mein add karne ke liye login karo"
+                message="Login first to add the product in cart!"
             />
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>

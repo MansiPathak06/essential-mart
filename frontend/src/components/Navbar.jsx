@@ -10,21 +10,62 @@ import { wishlistApi } from '@/lib/api';
 
 const CATEGORY_DATA = {
   MEN: [
-    { title: "WESTERN WEAR", links: [{name: "Jeans", slug: "jeans"}, {name: "Shirts", slug: "shirts"}, {name: "Shorts", slug: "shorts"}, {name: "Track Pants", slug: "track-pants"}, {name: "Tshirts", slug: "t-shirts"}] },
-    { title: "FOOTWEAR", links: [{name: "Boots", slug: "boots"}, {name: "Casual Shoes", slug: "casual-shoes"}, {name: "Sneakers", slug: "sneakers"}, {name: "Sports Shoes", slug: "sports-shoes"}] },
-    { title: "ETHNIC WEAR", links: [{name: "Kurtas", slug: "ethnic"}, {name: "Sherwani Sets", slug: "ethnic"}, {name: "Stoles", slug: "ethnic"}] },
+    { title: "WESTERN WEAR", links: [
+      { name: "Jeans",       slug: "jeans" },
+      { name: "Shirts",      slug: "shirts" },
+      { name: "Shorts",      slug: "shorts" },
+      { name: "Track Pants", slug: "track-pants" },
+      { name: "T-Shirts",    slug: "t-shirts" },
+    ]},
+    { title: "FOOTWEAR", links: [
+      { name: "Boots",        slug: "boots" },
+      { name: "Casual Shoes", slug: "casual-shoes" },
+      { name: "Sneakers",     slug: "sneakers" },
+      { name: "Sports Shoes", slug: "sports-shoes" },
+    ]},
+    { title: "ETHNIC WEAR", links: [
+      { name: "Kurtas",        slug: "ethnic" },
+      { name: "Sherwani Sets", slug: "ethnic" },
+      { name: "Stoles",        slug: "ethnic" },
+    ]},
   ],
+
   WOMEN: [
-    { title: "ETHNIC WEAR", links: [{name: "Kurtis", slug: "kurtis"}, {name: "Sarees", slug: "sarees"}, {name: "Lehengas", slug: "lehengas"}, {name: "Suit Sets", slug: "suit-sets"}] },
-    { title: "WESTERN WEAR", links: [{name: "Tops", slug: "tops"}, {name: "Dresses", slug: "dresses"}, {name: "Jeans", slug: "jeans"}, {name: "Skirts", slug: "skirts"}, {name: "Tshirts", slug: "tshirts"}] },
-    { title: "FOOTWEAR", links: [{name: "Heels", slug: "heels"}, {name: "Flats", slug: "flats"}, {name: "Sneakers", slug: "sneakers"}, {name: "Sandals", slug: "sandals"}] },
-    { title: "JEWELLERY", links: [{name: "Earrings", slug: "earrings"}, {name: "Necklaces", slug: "necklaces"}, {name: "Rings", slug: "rings"}, {name: "Bracelets", slug: "bracelets"}] },
+    { title: "ETHNIC WEAR", links: [
+      { name: "Sarees",     slug: "sarees" },
+      { name: "Kurtis",     slug: "kurtas" },      // ✅ slug matches filter
+      { name: "Lehengas",   slug: "ethnic-sets" }, // ✅ slug matches filter
+      { name: "Suit Sets",  slug: "suits" },        // ✅ slug matches filter
+    ]},
+    { title: "WESTERN WEAR", links: [
+      { name: "Tops",       slug: "tops" },
+      { name: "Dresses",    slug: "dresses" },
+      { name: "Co-ord Sets",slug: "co-ord-sets" },
+      { name: "Bottoms",    slug: "bottoms" },
+    ]},
+    { title: "MORE", links: [
+      { name: "Accessories", slug: "accessories" },
+      { name: "Beauty",      slug: "beauty" },
+    ]},
   ],
-  KIDS: [
-    { title: "BOYS", links: [{name: "T-Shirts", slug: "tshirts"}, {name: "Shirts", slug: "shirts"}, {name: "Jeans", slug: "jeans"}, {name: "Shorts", slug: "shorts"}] },
-    { title: "GIRLS", links: [{name: "Dresses", slug: "dresses"}, {name: "Tops", slug: "tops"}, {name: "Skirts", slug: "skirts"}] },
-    { title: "FOOTWEAR", links: [{name: "School Shoes", slug: "school-shoes"}, {name: "Sneakers", slug: "sneakers"}, {name: "Sandals", slug: "sandals"}] }
-  ]
+
+ KIDS: [
+  { title: "TOPS & SHIRTS", links: [
+    { name: "Tops",    slug: "tops" },
+    { name: "Shirts",  slug: "shirts" },
+  ]},
+  { title: "BOTTOMS", links: [
+    { name: "Jeans",   slug: "jeans" },
+    { name: "Bottoms", slug: "bottoms" },
+  ]},
+  { title: "ETHNIC & PARTY", links: [
+    { name: "Ethnic Wear", slug: "ethnic" },
+    { name: "Party Wear",  slug: "party" },
+  ]},
+  { title: "FOOTWEAR", links: [
+    { name: "Footwear", slug: "shoes" }, // ✅ shoes — sidebar se match
+  ]},
+],
 };
 
 export default function Navbar() {
@@ -35,25 +76,36 @@ export default function Navbar() {
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const { totalItems, clearCart } = useCart();
 
-  useEffect(() => {
+useEffect(() => {
+  const loadUser = () => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
         const displayName = parsed.email ? parsed.email.split('@')[0] : 'User';
-        window.setTimeout(() => setUser({
+        setUser({
           name: displayName,
           email: parsed.email || '',
           role: (parsed.role || 'user').toLowerCase(),
-        }), 0);
+        });
       } catch (e) {
         localStorage.removeItem('user');
       }
+    } else {
+      setUser(null); // logout ke liye bhi kaam karega
     }
-  }, []);
+  };
+
+  loadUser(); // mount pe
+
+  // ✅ Modal login ko sun'na
+  window.addEventListener('userLoggedIn', loadUser);
+  return () => window.removeEventListener('userLoggedIn', loadUser);
+}, []);
 
   const fetchWishlist = async () => {
     const token = localStorage.getItem('token');
@@ -68,6 +120,21 @@ export default function Navbar() {
       setWishlistLoading(false);
     }
   };
+
+  const handleSearch = (e) => {
+  if (e.key === 'Enter' && searchQuery.trim()) {
+    // Current path dekho — kahan hain user
+    const path = window.location.pathname;
+    if (path.includes('men-store') || path.includes('women-store') || path.includes('kids-store')) {
+      // Same store pe search karo
+      router.push(`${path}?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      // Kisi aur page pe hain toh women-store pe le jao by default
+      router.push(`/women-store?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+    setSearchQuery('');
+  }
+};
 
   const handleWishlistOpen = () => {
     const token = localStorage.getItem('token');
@@ -127,8 +194,15 @@ export default function Navbar() {
 
             {/* Search */}
             <div className="relative hidden lg:block">
-              <input type="text" placeholder="SEARCH..."
-                className="bg-gray-50 border border-gray-100 rounded-full px-5 py-2 text-[10px] font-bold tracking-wider w-48 focus:w-64 focus:bg-white focus:border-[#a68b6d] outline-none transition-all uppercase" />
+           {/* Search input update karo */}
+<input
+  type="text"
+  placeholder="SEARCH..."
+  value={searchQuery}
+  onChange={e => setSearchQuery(e.target.value)}
+  onKeyDown={handleSearch}
+  className="bg-gray-50 border border-gray-100 rounded-full px-5 py-2 text-[10px] font-bold tracking-wider w-48 focus:w-64 focus:bg-white focus:border-[#a68b6d] outline-none transition-all uppercase"
+/>
               <Search className="absolute right-4 top-2.5 text-gray-400" size={14} />
             </div>
 

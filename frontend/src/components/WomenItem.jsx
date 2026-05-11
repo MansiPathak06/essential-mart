@@ -59,7 +59,7 @@ export default function WomenItem() {
 
     if (products.length === 0) return (
         <div className="text-center py-10 text-gray-400">
-            <p>Koi product nahi mila</p>
+            <p>No products found.</p>
         </div>
     );
 
@@ -69,7 +69,7 @@ export default function WomenItem() {
                 isOpen={showLoginModal}
                 onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
                 onSuccess={() => { if (pendingProductId) { doAddToCart(pendingProductId); setPendingProductId(null); } }}
-                message="Cart mein add karne ke liye login karo"
+                message="Login first to add the product in cart!"
             />
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

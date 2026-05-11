@@ -4,7 +4,7 @@ import { X, ShoppingBag, User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-export default function LoginModal({ isOpen, onClose, onSuccess, message = 'Cart mein add karne ke liye login karo' }) {
+export default function LoginModal({ isOpen, onClose, onSuccess, message = 'Login first to add the product in cart!' }) {
     const [tab, setTab] = useState('login');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -30,6 +30,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess, message = 'Cart
 
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+
+            window.dispatchEvent(new Event('userLoggedIn'));
             onClose();
             if (onSuccess) onSuccess();
         } catch (err) {
@@ -81,7 +83,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, message = 'Cart
                         <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#a68b6d]">KEI FASHION</span>
                     </div>
                     <h2 className="text-xl font-bold leading-tight">{message}</h2>
-                    <p className="text-white/50 text-xs mt-1">Login ya signup karo — free hai!</p>
+                    <p className="text-white/50 text-xs mt-1">Login or Sign up? -Free </p>
                 </div>
 
                 {/* Tab switcher */}
@@ -172,7 +174,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess, message = 'Cart
                     )}
 
                     <p className="text-center text-[10px] text-gray-400 mt-4">
-                        Continue karne se aap hamare <span className="underline cursor-pointer">Terms</span> se agree karte hain
+                        By continuing, you agree to our Terms & Conditions and Privacy Policy
                     </p>
                 </div>
             </div>

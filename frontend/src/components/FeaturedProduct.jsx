@@ -64,7 +64,7 @@ export default function FeaturedProducts({ category = "", limit = 8 }) {
         isOpen={showLoginModal}
         onClose={() => { setShowLoginModal(false); setPendingId(null); }}
         onSuccess={() => { if (pendingId) { doAddToCart(pendingId); setPendingId(null); } }}
-        message="Cart mein add karne ke liye login karo"
+        message="Login first to add the product in cart!"
       />
 
       <section className="w-full bg-[#0e0c0b]">

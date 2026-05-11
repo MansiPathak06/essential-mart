@@ -115,7 +115,7 @@ export default function ProductDetailPage() {
                 isOpen={showLoginModal}
                 onClose={() => { setShowLoginModal(false); setPendingAction(null); }}
                 onSuccess={handleLoginSuccess}
-                message={pendingAction === 'wishlist' ? 'Wishlist ke liye login karo' : 'Cart mein add karne ke liye login karo'}
+                message={pendingAction === 'wishlist' ? 'Wishlist ke liye login karo' : 'Login first to add the product in cart!'}
             />
 
             {/* Breadcrumb */}

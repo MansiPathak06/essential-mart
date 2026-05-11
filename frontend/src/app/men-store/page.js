@@ -5,6 +5,7 @@ import { Heart, Filter, X, ChevronRight, TrendingUp, Zap, Award, ShoppingBag, Ch
 import MenItem from "@/components/MenItem";
 import { useCart } from "@/context/CartContext";
 import LoginModal from "@/components/LoginModal";
+import { useCategories } from '@/hooks/useCategories';
 
 const FILTER_DATA = {
   categories: [
@@ -19,16 +20,16 @@ const FILTER_DATA = {
   ],
 };
 
-const CATEGORIES = [
-  { name: "Shirts",      slug: "shirts",      img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&q=80" },
-  { name: "T-Shirts",   slug: "t-shirts",    img: "https://i.pinimg.com/1200x/2b/ae/ad/2baeadfbbf9ff689f9e02b0be9e7cff6.jpg" },
-  { name: "Jeans",      slug: "jeans",       img: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&q=80" },
-  { name: "Ethnic",     slug: "ethnic",      img: "https://i.pinimg.com/736x/95/95/2f/95952f844e03fc88e66e60d964d739cd.jpg" },
-  { name: "Jackets",    slug: "jackets",     img: "https://i.pinimg.com/736x/96/3c/48/963c48f7f5be5b7cf05df0eedf845cb6.jpg" },
-  { name: "Hoodies",    slug: "hoodies",     img: "https://i.pinimg.com/1200x/7c/2a/b8/7c2ab8fd05e5fd08b66b46b0d8b04979.jpg" },
-  { name: "Trousers",   slug: "trousers",    img: "https://i.pinimg.com/1200x/98/43/ea/9843eabd475284318e73b26c5d55b524.jpg" },
-  { name: "Track Pants",slug: "track-pants", img: "https://i.pinimg.com/736x/99/f6/cb/99f6cb3a69572099a6b9849b078a7702.jpg" },
-];
+// const CATEGORIES = [
+//   { name: "Shirts",      slug: "shirts",      img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&q=80" },
+//   { name: "T-Shirts",   slug: "t-shirts",    img: "https://i.pinimg.com/1200x/2b/ae/ad/2baeadfbbf9ff689f9e02b0be9e7cff6.jpg" },
+//   { name: "Jeans",      slug: "jeans",       img: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&q=80" },
+//   { name: "Ethnic",     slug: "ethnic",      img: "https://i.pinimg.com/736x/95/95/2f/95952f844e03fc88e66e60d964d739cd.jpg" },
+//   { name: "Jackets",    slug: "jackets",     img: "https://i.pinimg.com/736x/96/3c/48/963c48f7f5be5b7cf05df0eedf845cb6.jpg" },
+//   { name: "Hoodies",    slug: "hoodies",     img: "https://i.pinimg.com/1200x/7c/2a/b8/7c2ab8fd05e5fd08b66b46b0d8b04979.jpg" },
+//   { name: "Trousers",   slug: "trousers",    img: "https://i.pinimg.com/1200x/98/43/ea/9843eabd475284318e73b26c5d55b524.jpg" },
+//   { name: "Track Pants",slug: "track-pants", img: "https://i.pinimg.com/736x/99/f6/cb/99f6cb3a69572099a6b9849b078a7702.jpg" },
+// ];
 
 const CAROUSEL_IMAGES = [
   'https://i.pinimg.com/736x/ba/48/8e/ba488e2f4b5ebb5d172b103732126a05.jpg',
@@ -42,6 +43,8 @@ const STYLE_BANNERS = [
   { label: "Best Seller", title: "Classic Whites", sub: "Timeless Wardrobe Staples", img: "https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&q=80" },
   { label: "Ethnic Edit", title: "Festive Ready", sub: "Kurtas & Sherwani Sets", img: "https://i.pinimg.com/736x/94/cb/66/94cb66f6e4331dee2e05578cc648b91a.jpg" },
 ];
+
+
 
 const WRAPPER = "max-w-[1440px] mx-auto px-6 md:px-14";
 
@@ -130,7 +133,10 @@ function MenStoreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const subCategory = searchParams.get("subcategory");
+  const searchQuery  = searchParams.get("search") || "";    
   const isViewAll = searchParams.get("view") === "all";
+  const categories = useCategories('Men');
+  const filterCategories = categories.map(c => ({ name: c.name, slug: c.slug })); // ✅ add karo
 
   const { addToCart } = useCart();
 
@@ -138,7 +144,9 @@ function MenStoreContent() {
   const [loading, setLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(
+  () => subCategory ? [subCategory] : []
+);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 20000 });
   const [appliedPriceRange, setAppliedPriceRange] = useState({ min: 0, max: 20000 });
   const [sortBy, setSortBy] = useState("popularity");
@@ -155,8 +163,8 @@ function MenStoreContent() {
     async function fetchProducts() {
       setLoading(true);
       try {
-        let url = `http://localhost:5000/api/products?category=men`;
-        if (subCategory) url += `&sub_category=${subCategory}`;
+      let url = `http://localhost:5000/api/products?category=men`;
+      if (subCategory) url += `&sub_category=${subCategory}`;
         const res = await fetch(url);
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -178,7 +186,13 @@ function MenStoreContent() {
       .filter(p => {
         const matchesPrice = p.price >= appliedPriceRange.min && p.price <= appliedPriceRange.max;
         const matchesCat = selectedCategories.length === 0 || selectedCategories.includes(p.sub_category);
-        return matchesPrice && matchesCat;
+       
+         // ✅ Yeh add karo
+      const matchesSearch = searchQuery.trim() === "" ||
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.sub_category?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesPrice && matchesCat && matchesSearch;
       })
       .sort((a, b) => {
         if (sortBy === "low") return a.price - b.price;
@@ -192,6 +206,11 @@ function MenStoreContent() {
     const timer = setInterval(() => setCurrentSlide(p => (p + 1) % CAROUSEL_IMAGES.length), 4000);
     return () => clearInterval(timer);
   }, []);
+
+  // Existing useEffects ke baad add karo
+useEffect(() => {
+  setSelectedCategories(subCategory ? [subCategory] : []);
+}, [subCategory]);
 
   const clearAllFilters = () => {
     setSelectedCategories([]);
@@ -238,7 +257,7 @@ function MenStoreContent() {
           isOpen={showLoginModal}
           onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
           onSuccess={handleLoginSuccess}
-          message="Cart mein add karne ke liye login karo"
+          message="Login first to add the product in cart!"
         />
 
         {/* Top Bar */}
@@ -246,9 +265,13 @@ function MenStoreContent() {
           <div className={`${WRAPPER} py-4 flex items-center justify-between`}>
             <div>
               <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-0.5">Men's Collection</p>
-              <h1 className="font-serif text-xl md:text-2xl capitalize italic text-white">
-                {isViewAll ? "All Products" : subCategory?.replace("-", " ")}
-              </h1>
+             <h1 className="font-serif text-xl md:text-2xl capitalize italic text-white">
+  {searchQuery
+    ? `Results for "${searchQuery}"`
+    : isViewAll
+    ? "All Products"
+    : subCategory?.replace("-", " ")}
+</h1>
             </div>
             <div className="flex items-center gap-3">
               <select value={sortBy} onChange={e => setSortBy(e.target.value)}
@@ -276,7 +299,7 @@ function MenStoreContent() {
               </div>
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#b85c38]">Category</p>
-                {FILTER_DATA.categories.map(c => (
+                {filterCategories.map(c => (
                   <label key={c.slug} className="flex items-center gap-2.5 cursor-pointer group">
                     <input type="checkbox" checked={selectedCategories.includes(c.slug)}
                       onChange={() => setSelectedCategories(p =>
@@ -312,7 +335,7 @@ function MenStoreContent() {
                 <X onClick={() => setIsFilterOpen(false)} size={22} />
               </div>
               <div className="space-y-4">
-                {FILTER_DATA.categories.map(c => (
+                {filterCategories.map(c => (
                   <label key={c.slug} className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" checked={selectedCategories.includes(c.slug)}
                       onChange={() => setSelectedCategories(p =>
@@ -341,7 +364,7 @@ function MenStoreContent() {
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-20 text-[#9a8a7a]">
                 <div className="text-5xl mb-4">🔍</div>
-                <p className="text-sm uppercase tracking-widest">Koi product nahi mila</p>
+                <p className="text-sm uppercase tracking-widest">No products found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -369,7 +392,7 @@ function MenStoreContent() {
         isOpen={showLoginModal}
         onClose={() => { setShowLoginModal(false); setPendingProductId(null); }}
         onSuccess={handleLoginSuccess}
-        message="Cart mein add karne ke liye login karo"
+        message="Login first to add the product in cart!"
       />
 
       {/* HERO */}
@@ -418,7 +441,7 @@ function MenStoreContent() {
             </div>
           </div>
           <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
-            {CATEGORIES.map(cat => (
+            {categories.map(cat => (
               <button key={cat.slug} onClick={() => router.push(`/men-store?subcategory=${cat.slug}`)}
                 className="group flex flex-col items-center gap-2">
                 <div className="w-full aspect-square overflow-hidden rounded-full border-2 border-[#e5ddd0] group-hover:border-[#b85c38] transition-all duration-300">
